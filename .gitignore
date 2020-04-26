@@ -1,1 +1,6 @@
 .bash_history
+*~
+*.o
+*.out
+tmp*
+k9cc
