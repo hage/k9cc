@@ -32,7 +32,26 @@ int main(int argc, char **argv) {
 
   print_header();
 
-  cprintf("mov rax, %d", atoi(argv[1]));
+  char *p = argv[1];
+
+  cprintf("mov rax, %ld", strtol(p, &p, 10));
+  while (*p) {
+    if (*p == '+') {
+      p++;
+      cprintf("add rax, %ld", strtol(p, &p, 10));
+      continue;
+    }
+
+    if (*p == '-') {
+      p++;
+      cprintf("sub rax, %ld", strtol(p, &p, 10));
+      continue;
+    }
+
+    eprintf("予期しない文字です: '%c'\n", *p);
+    return 1;
+  }
   cprintf("ret");
+
   return 0;
 }
