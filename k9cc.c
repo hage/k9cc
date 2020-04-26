@@ -17,17 +17,18 @@ void cprintf(const char *fmt, ...) {
   printf("\n");
 }
 
-void eprintf(const char *fmt, ...) {
+void error(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
   va_end(ap);
+  exit(1);
 }
 
 int main(int argc, char **argv) {
   if (argc != 2) {
-    eprintf("引数の個数が正しくありません\n");
-    return 1;
+    error("引数の個数が正しくありません");
   }
 
   print_header();
@@ -48,8 +49,7 @@ int main(int argc, char **argv) {
       continue;
     }
 
-    eprintf("予期しない文字です: '%c'\n", *p);
-    return 1;
+    error("予期しない文字です: '%c'", *p);
   }
   cprintf("ret");
 
