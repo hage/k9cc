@@ -17,9 +17,16 @@ void cprintf(const char *fmt, ...) {
   printf("\n");
 }
 
+void eprintf(const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+}
+
 int main(int argc, char **argv) {
   if (argc != 2) {
-    fprintf(stderr, "引数の個数が正しくありません\n");
+    eprintf("引数の個数が正しくありません\n");
     return 1;
   }
 
