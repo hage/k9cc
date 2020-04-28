@@ -26,8 +26,25 @@ Token *token;
 // 入力プログラム
 char *user_input;
 
+void cprintf(const char *fmt, ...) {
+  printf("        ");
+  va_list ap;
+  va_start(ap, fmt);
+  vprintf(fmt, ap);
+  va_end(ap);
+  printf("\n");
+}
+
 // エラーを報告する関数
 // printfと同じ引数を取る
+void pp(const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  va_end(ap);
+}
+
 void error(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
@@ -36,6 +53,8 @@ void error(const char *fmt, ...) {
   va_end(ap);
   exit(1);
 }
+
+
 
 void error_at(char *loc, char *fmt, ...) {
   va_list ap;
@@ -109,7 +128,7 @@ Token *tokenize(char *p) {
       continue;
     }
     // 演算子
-    if (*p == '+' || *p == '-') {
+    if (strchr("+-*/()", *p)) {
       cur = new_token(TK_RESERVED, cur, p++);
       continue;
     }
@@ -126,19 +145,128 @@ Token *tokenize(char *p) {
 }
 
 
+////////////////////////////////////////////////////////////////
+// node
+
+typedef enum {
+  ND_ADD,                       // +
+  ND_SUB,                       // -
+  ND_MUL,                       // *
+  ND_DIV,                       // /
+  ND_NUM,                       // 整数
+} NodeKind;
+
+// 抽象構文木のノードの型
+typedef struct Node Node;
+struct Node {
+  NodeKind kind;                // ノードの型
+  Node *lhs;                    // 左辺
+  Node *rhs;                    // 右辺
+  int val;                      // kindがND_NUMの場合のみ使う
+};
+
+Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = kind;
+  node->lhs = lhs;
+  node->rhs = rhs;
+  return node;
+}
+
+Node *new_node_num(int val) {
+  Node *node = new_node(ND_NUM, NULL, NULL);
+  node->val = val;
+  return node;
+}
+
+Node *expr();
+Node *mul();
+Node *primary();
+
+Node *expr() {
+  Node *node = mul();
+
+  for (;;) {
+    if (consume('+')) {
+      node = new_node(ND_ADD, node, mul());
+    }
+    else if (consume('-')) {
+      node = new_node(ND_SUB, node, mul());
+    }
+    else {
+      return node;
+    }
+  }
+}
+
+Node *mul() {
+  Node *node = primary();
+
+  for (;;) {
+    if (consume('*')) {
+      node = new_node(ND_MUL, node, primary());
+    }
+    else if (consume('/')) {
+      node = new_node(ND_DIV, node, primary());
+    }
+    else {
+      return node;
+    }
+  }
+}
+
+Node *primary() {
+  // 次のトークンが"("なら"(" expr ")"のはず
+  if (consume('(')) {
+    Node *node = expr();
+    expect(')');
+    return node;
+  }
+  // そうでなければ数値のはず
+  return new_node_num(expect_number());
+}
+
+
+void gen(Node *node) {
+  if (node->kind == ND_NUM) {
+    cprintf("push %d", node->val);
+    return;
+  }
+
+  gen(node->lhs);
+  gen(node->rhs);
+
+  cprintf("pop rdi");
+  cprintf("pop rax");
+
+  switch (node->kind) {
+  case ND_ADD:
+    cprintf("add rax, rdi");
+    break;
+  case ND_SUB:
+    cprintf("sub rax, rdi");
+    break;
+  case ND_MUL:
+    cprintf("imul rax, rdi");
+    break;
+  case ND_DIV:
+    cprintf("cqo");
+    cprintf("idiv rdi");
+    break;
+  case ND_NUM:
+    // not reach
+    break;
+  }
+
+  cprintf("push rax");
+}
+
+////////////////////////////////////////////////////////////////
+
 void print_header(void) {
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
   printf("main:\n");
-}
-
-void cprintf(const char *fmt, ...) {
-  printf("        ");
-  va_list ap;
-  va_start(ap, fmt);
-  vprintf(fmt, ap);
-  va_end(ap);
-  printf("\n");
 }
 
 int main(int argc, char **argv) {
@@ -146,29 +274,20 @@ int main(int argc, char **argv) {
     error("引数の個数が正しくありません");
   }
 
+  // トークナイズしてパースする
   user_input = argv[1];
-
-  // トークナイズする
   token = tokenize(user_input);
+  Node *node = expr();
 
   // アセンブリ前半部分を出力
   print_header();
 
-  // 最初の式は数でなければならないので、それをチェックして
-  // 最初のmov命令を主力
-  cprintf("mov rax, %d", expect_number());
+  // 抽象構文木を下りながらコード生成
+  gen(node);
 
-  // `+ <数>` あるいは `- <数>` というトークンの並びを消費しつつ
-  // アセンブリを出力
-  while (!at_eof()) {
-    if (consume('+')) {
-      cprintf("add rax, %d", expect_number());
-      continue;
-    }
-
-    expect('-');
-    cprintf("sub rax, %d", expect_number());
-  }
+  // スタックトップ錦全体の値が残っているので
+  // それをRAXに設定して関数からの返り値とする
+  cprintf("pop rax");
   cprintf("ret");
   return 0;
 }
