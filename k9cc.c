@@ -181,6 +181,10 @@ typedef enum {
   ND_SUB,                       // -
   ND_MUL,                       // *
   ND_DIV,                       // /
+  ND_EQU,                       // ==
+  ND_NEQ,                       // !=
+  ND_GRT,                       // >
+  ND_GEQ,                       // =>
   ND_NUM,                       // 整数
 } NodeKind;
 
@@ -208,11 +212,56 @@ Node *new_node_num(int val) {
 }
 
 Node *expr();
+Node *equality();
+Node *relational();
+Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
 
 Node *expr() {
+  return equality();
+}
+
+Node *equality() {
+  Node *node = relational();
+
+  for (;;) {
+    if (consume("==")) {
+      node = new_node(ND_EQU, node, relational());
+    }
+    else if (consume("!=")) {
+      node = new_node(ND_NEQ, node, relational());
+    }
+    else {
+      return node;
+    }
+  }
+}
+
+Node *relational() {
+  Node *node = add();
+
+  for (;;) {
+    if (consume("<")) {
+      node = new_node(ND_GRT, node, add());
+    }
+    else if (consume(">")) {
+      node = new_node(ND_GRT, add(), node);
+    }
+    else if (consume("<=")) {
+      node = new_node(ND_GEQ, node, add());
+    }
+    else if (consume(">=")) {
+      node = new_node(ND_GEQ, add(), node);
+    }
+    else {
+      return node;
+    }
+  }
+}
+
+Node *add() {
   Node *node = mul();
 
   for (;;) {
@@ -265,6 +314,14 @@ Node *primary() {
   return new_node_num(expect_number());
 }
 
+void gen_relation(const char *instraction) {
+  // cprintf("pop rdi");
+  // cprintf("pop rax");
+  cprintf("cmp rax, rdi");
+  cprintf("%s al", instraction);
+  cprintf("movzb rax, al");
+
+}
 
 void gen(Node *node) {
   if (node->kind == ND_NUM) {
@@ -291,6 +348,18 @@ void gen(Node *node) {
   case ND_DIV:
     cprintf("cqo");
     cprintf("idiv rdi");
+    break;
+  case ND_EQU:
+    gen_relation("sete");
+    break;
+  case ND_NEQ:
+    gen_relation("setne");
+    break;
+  case ND_GRT:
+    gen_relation("setl");
+    break;
+  case ND_GEQ:
+    gen_relation("setle");
     break;
   case ND_NUM:
     // not reach
