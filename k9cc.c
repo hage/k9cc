@@ -126,6 +126,12 @@ Token *new_token(TokenKind kind, Token *cur, char *str, size_t len) {
 
 // 入力文字列pをトークナイズして返す
 Token *tokenize(char *p) {
+  static const char *operators[] = {
+    "==", "!=", "<=", ">=",
+    "<", ">",
+    "-", "+", "/", "*", "(", ")",
+    NULL
+  };
   Token head;
   head.next = NULL;
   Token *cur = &head;
@@ -136,11 +142,22 @@ Token *tokenize(char *p) {
       p++;
       continue;
     }
+
     // 演算子
-    if (strchr("+-*/()", *p)) {
-      cur = new_token(TK_RESERVED, cur, p++, 1);
+    char const **op;
+    for (op = operators; *op; op++) {
+      size_t len = strlen(*op);
+      if (len <= strlen(p) && !memcmp(p, *op, len)) {
+        cur = new_token(TK_RESERVED, cur, p, len);
+        p += len;
+        break;
+      }
+    }
+    // *opがNULLでないときは演算子が見つかったのでループを回す
+    if (*op) {
       continue;
     }
+
     // 数字
     if (isdigit(*p)) {
       char *org_p = p;
