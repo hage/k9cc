@@ -14,8 +14,6 @@ static void cprintf(const char *fmt, ...) {
 }
 
 static void gen_relation(const char *instraction) {
-  // cprintf("pop rdi");
-  // cprintf("pop rax");
   cprintf("cmp rax, rdi");
   cprintf("%s al", instraction);
   cprintf("movzb rax, al");
