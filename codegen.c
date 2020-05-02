@@ -20,12 +20,35 @@ static void gen_relation(const char *instraction) {
 
 }
 
+static void gen_lval(Node *node) {
+  if (node->kind != ND_LVAR) {
+    error("代入の左辺値が変数ではありません");
+  }
+  cprintf("mov rax, rbp");
+  cprintf("sub rax, %d", node->offset);
+  cprintf("push rax");
+}
+
 static void gen(Node *node) {
-  if (node->kind == ND_NUM) {
+  switch (node->kind) {
+  case ND_NUM:
     cprintf("push %d", node->val);
     return;
+  case ND_LVAR:
+    gen_lval(node);
+    cprintf("pop rax");
+    cprintf("mov rax, [rax]");
+    cprintf("push rax");
+    return;
+  case ND_ASSIGN:
+    gen_lval(node->lhs);
+    gen(node->rhs);
+    cprintf("pop rdi");
+    cprintf("pop rax");
+    cprintf("mov [rax], rdi");
+    cprintf("push rdi");
+    return;
   }
-
   gen(node->lhs);
   gen(node->rhs);
 
@@ -58,9 +81,6 @@ static void gen(Node *node) {
   case ND_GEQ:
     gen_relation("setle");
     break;
-  case ND_NUM:
-    // not reach
-    break;
   }
 
   cprintf("push rax");
@@ -72,15 +92,26 @@ static void print_header(void) {
   printf("main:\n");
 }
 
-void codegen(Node *node) {
+void codegen(Node **node) {
   // アセンブリ前半部分を出力
   print_header();
 
-  // 抽象構文木を下りながらコード生成
-  gen(node);
+  // プロローグ
+  cprintf("push rbp");
+  cprintf("mov rbp, rsp");
+  cprintf("sub rsp, %d", 8 * 26);
 
-  // スタックトップ錦全体の値が残っているので
+  // 抽象構文木を下りながらコード生成
+  for (int i = 0; node[i]; i++) {
+    gen(node[i]);
+  }
+
+  // スタックトップ全体の値が残っているので
   // それをRAXに設定して関数からの返り値とする
   cprintf("pop rax");
+
+  // エピローグ
+  cprintf("mov rsp, rbp");
+  cprintf("pop rbp");
   cprintf("ret");
 }

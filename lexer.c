@@ -19,6 +19,18 @@ bool consume(char *op) {
   return true;
 }
 
+// トークンが変数のときには
+// トークンを1つ読み進めて返す。
+// それ以外のときはNULLを返す。
+Token *consume_ident() {
+  if (token->kind == TK_IDENT) {
+    Token *r = token;
+    token = token->next;
+    return r;
+  }
+  return NULL;
+}
+
 /* 次のトークンが期待している記号のときには、トークンを1つ読みすすめる。
  * それ以外のときはエラーを報告する */
 void expect(char *op) {
@@ -62,6 +74,7 @@ Token *tokenize(char *p) {
     "==", "!=", "<=", ">=",
     "<", ">",
     "-", "+", "/", "*", "(", ")",
+    "=", ";",
     NULL
   };
   Token head;
@@ -71,6 +84,13 @@ Token *tokenize(char *p) {
   while (*p) {
     // 空白文字をスキップ
     if (isspace(*p)) {
+      p++;
+      continue;
+    }
+
+    // 変数
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p, 1);
       p++;
       continue;
     }
