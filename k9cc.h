@@ -74,7 +74,7 @@ Token *tokenize(char *p);
 
 // parser.c
 Node **program();
-
+size_t lvar_top_offset();
 // codegen.c
 void codegen(Node **node);
 

@@ -1,4 +1,39 @@
+#include <string.h>
 #include "k9cc.h"
+
+////////////////////////////////////////////////////////////////
+// local variables
+typedef struct LVar {
+  struct LVar *next;
+  char *name;                   // 変数の名前
+  size_t len;                   // 名前の長さ
+  size_t offset;                // RBPからのオフセット
+} LVar;
+
+static LVar *locals;
+
+LVar *find_lvar(Token *tok) {
+  for (LVar *var = locals; var; var = var->next) {
+    if (var->len == tok->len && !memcmp(var->name, tok->str, var->len)) {
+      return var;
+    }
+  }
+  return NULL;
+}
+
+LVar *new_lvar(Token *tok, size_t offset) {
+  LVar *lvar = calloc(1, sizeof(LVar));
+  lvar->next = locals;
+  lvar->name = tok->str;
+  lvar->len = tok->len;
+  lvar->offset = lvar_top_offset() + offset;
+  locals = lvar;
+  return lvar;
+}
+
+size_t lvar_top_offset() {
+  return locals ? locals->offset : 0;
+}
 
 ////////////////////////////////////////////////////////////////
 // create node
@@ -151,7 +186,15 @@ static Node *primary() {
   if (tok) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
-    node->offset = (tok->str[0] - 'a' + 1) * 8;
+
+    LVar *lvar = find_lvar(tok);
+    if (lvar) {
+      node->offset = lvar->offset;
+    }
+    else {
+      LVar *lvar = new_lvar(tok, 8);
+      node->offset = lvar->offset;
+    }
     return node;
   }
 

@@ -18,7 +18,8 @@ assert () {
     fi
 }
 
-assert 42 'a=1+1;b=20;a+b*2;'
+assert 99 'foo=33;bar=3;foo*bar;'
+assert 42 'a0=1+1;a1=20;a0+a1*2;'
 assert 0 '0;'
 assert 42 '42;'
 assert 21 "5+20-4;"

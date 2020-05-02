@@ -99,7 +99,7 @@ void codegen(Node **node) {
   // プロローグ
   cprintf("push rbp");
   cprintf("mov rbp, rsp");
-  cprintf("sub rsp, %d", 8 * 26);
+  cprintf("sub rsp, %d", lvar_top_offset());
 
   // 抽象構文木を下りながらコード生成
   for (int i = 0; node[i]; i++) {

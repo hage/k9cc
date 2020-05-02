@@ -89,9 +89,11 @@ Token *tokenize(char *p) {
     }
 
     // 変数
-    if ('a' <= *p && *p <= 'z') {
-      cur = new_token(TK_IDENT, cur, p, 1);
-      p++;
+    if (isalpha(*p)) {
+      char *q = p;
+      for (; *p && isalnum(*p); p++)
+        ;
+      cur = new_token(TK_IDENT, cur, q, p - q);
       continue;
     }
 
