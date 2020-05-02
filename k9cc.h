@@ -54,7 +54,6 @@ struct Node {
 // external valiables
 extern char *user_input;        // 入力プログラム
 extern Token *token;            // 現在着目しているトークン
-extern Node *code[];            // パースしたコード parser.c
 
 
 ////////////////////////////////////////////////////////////////
