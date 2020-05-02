@@ -11,7 +11,7 @@ test: k9cc
 	./test.sh
 
 clean:
-	rm -f k9cc *.o *~ tmp*
+	rm -f k9cc *.o *~ tmp* a.out
 
 
 ################ outside of Docker
