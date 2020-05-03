@@ -6,6 +6,14 @@
 // 現在着目しているトークン
 Token *token;
 
+static bool is_1st_letter_of_symbol(int c) {
+  return c == '_' || isalpha(c);
+}
+
+static bool is_letter_of_symbol(int c) {
+  return is_1st_letter_of_symbol(c) || isdigit(c);
+}
+
 /* トークンが期待している記号のときは
  * トークンを1つ読み進めて真を返す。
  * それ以外の場合は偽を返す */
@@ -89,9 +97,9 @@ Token *tokenize(char *p) {
     }
 
     // 変数
-    if (isalpha(*p)) {
+    if (is_1st_letter_of_symbol(*p)) {
       char *q = p;
-      for (; *p && isalnum(*p); p++)
+      for (; *p && is_letter_of_symbol(*p); p++)
         ;
       cur = new_token(TK_IDENT, cur, q, p - q);
       continue;
