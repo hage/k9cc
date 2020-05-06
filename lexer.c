@@ -87,6 +87,16 @@ static Token *new_token(TokenKind kind, Token *cur, char *str, size_t len) {
   return tok;
 }
 
+static bool tokenize_keyword(const char *keyword, TokenKind kind, Token **pcur, char **pc) {
+  size_t len = strlen(keyword);
+  if (!strncmp(*pc, keyword, len) && !is_letter_of_symbol((*pc)[len])) {
+    *pcur = new_token(kind, *pcur, *pc, 0);
+    *pc += len;
+    return true;
+  }
+  return false;
+}
+
 
 // 入力文字列pをトークナイズして返す
 Token *tokenize(char *p) {
@@ -109,12 +119,9 @@ Token *tokenize(char *p) {
     }
 
     // return
-    if (!strncmp(p, "return", 6) && !is_letter_of_symbol(p[6])) {
-      cur = new_token(TK_RETURN, cur, p, 0);
-      p += 6;
+    if (tokenize_keyword("return", TK_RETURN, &cur, &p)) {
       continue;
     }
-
     // 変数
     if (is_1st_letter_of_symbol(*p)) {
       char *q = p;
