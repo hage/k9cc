@@ -76,7 +76,13 @@ Node **program() {
 }
 
 static Node *stmt() {
-  Node *node = expr();
+  Node *node;
+  if (consume_kind(TK_RETURN)) {
+    node = new_node(ND_RETURN, expr(), NULL);
+  }
+  else {
+    node = expr();
+  }
   expect(";");
   return node;
 }

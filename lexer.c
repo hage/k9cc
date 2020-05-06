@@ -27,6 +27,18 @@ bool consume(char *op) {
   return true;
 }
 
+// 期待したトークンの型のときは
+// トークンを1つ読み進めてそのトークンを返す。
+// それ以外のときはNULLを返する
+Token *consume_kind(TokenKind kind) {
+  if (token->kind == kind) {
+    Token *r = token;
+    token = token->next;
+    return r;
+  }
+  return NULL;
+}
+
 // トークンが変数のときには
 // トークンを1つ読み進めて返す。
 // それ以外のときはNULLを返す。
@@ -93,6 +105,13 @@ Token *tokenize(char *p) {
     // 空白文字をスキップ
     if (isspace(*p)) {
       p++;
+      continue;
+    }
+
+    // return
+    if (!strncmp(p, "return", 6) && !is_letter_of_symbol(p[6])) {
+      cur = new_token(TK_RETURN, cur, p, 0);
+      p += 6;
       continue;
     }
 

@@ -48,6 +48,13 @@ static void gen(Node *node) {
     cprintf("mov [rax], rdi");
     cprintf("push rdi");
     return;
+  case ND_RETURN:
+    gen(node->lhs);
+    cprintf("pop rax");
+    cprintf("mov rsp, rbp");
+    cprintf("pop rbp");
+    cprintf("ret");
+    return;
   }
   gen(node->lhs);
   gen(node->rhs);

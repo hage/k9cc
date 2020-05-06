@@ -18,6 +18,8 @@ assert () {
     fi
 }
 
+assert 42 'return 42;'
+assert 42 'foo=33;bar=9;return foo+bar;10;'
 assert 99 'foo=33;bar=3;foo*bar;'
 assert 42 'a0=1+1;a1=20;a0+a1*2;'
 assert 0 '0;'
