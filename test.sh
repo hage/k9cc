@@ -18,6 +18,8 @@ assert () {
     fi
 }
 
+assert 42 'a=1;if(a==1)return 1+a*41;'
+assert 20 'if(40*2==0)10;20;';
 assert 42 'return 42;'
 assert 42 'foo=33;bar=9;return foo+bar;10;'
 assert 99 'foo=33;bar=3;foo*bar;'

@@ -5,7 +5,9 @@
 
 
 static void cprintf(const char *fmt, ...) {
-  printf("        ");
+  if (*fmt != '.') {            // ラベルのとき
+    printf("        ");
+  }
   va_list ap;
   va_start(ap, fmt);
   vprintf(fmt, ap);
@@ -13,11 +15,15 @@ static void cprintf(const char *fmt, ...) {
   printf("\n");
 }
 
+static int new_label() {
+  static int count = 0;
+  return count++;
+}
+
 static void gen_relation(const char *instraction) {
   cprintf("cmp rax, rdi");
   cprintf("%s al", instraction);
   cprintf("movzb rax, al");
-
 }
 
 static void gen_lval(Node *node) {
@@ -30,6 +36,7 @@ static void gen_lval(Node *node) {
 }
 
 static void gen(Node *node) {
+  int label;
   switch (node->kind) {
   case ND_NUM:
     cprintf("push %d", node->val);
@@ -54,6 +61,15 @@ static void gen(Node *node) {
     cprintf("mov rsp, rbp");
     cprintf("pop rbp");
     cprintf("ret");
+    return;
+  case ND_IF:
+    label = new_label();
+    gen(node->lhs);
+    cprintf("pop rax");
+    cprintf("cmp rax, 0");
+    cprintf("je .Lend%04d", label);
+    gen(node->rhs);
+    cprintf(".Lend%04d:", label);
     return;
   }
   gen(node->lhs);

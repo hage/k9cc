@@ -122,6 +122,9 @@ Token *tokenize(char *p) {
     if (tokenize_keyword("return", TK_RETURN, &cur, &p)) {
       continue;
     }
+    else if(tokenize_keyword("if", TK_IF, &cur, &p)) {
+      continue;
+    }
     // 変数
     if (is_1st_letter_of_symbol(*p)) {
       char *q = p;

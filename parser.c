@@ -80,6 +80,13 @@ static Node *stmt() {
   if (consume_kind(TK_RETURN)) {
     node = new_node(ND_RETURN, expr(), NULL);
   }
+  else if (consume_kind(TK_IF)) {
+    expect("(");
+    node = new_node(ND_IF, expr(), NULL);
+    expect(")");
+    node->rhs = stmt();
+    return node;
+  }
   else {
     node = expr();
   }
