@@ -64,11 +64,23 @@ static void gen(Node *node) {
     return;
   case ND_IF:
     label = new_label();
-    gen(node->lhs);
+    gen(node->cond);
     cprintf("pop rax");
     cprintf("cmp rax, 0");
     cprintf("je .Lend%04d", label);
-    gen(node->rhs);
+    gen(node->then_clause);
+    cprintf(".Lend%04d:", label);
+    return;
+  case ND_IFEL:
+    label = new_label();
+    gen(node->cond);
+    cprintf("pop rax");
+    cprintf("cmp rax, 0");
+    cprintf("je .Lelse%04d", label);
+    gen(node->then_clause);
+    cprintf("jmp .Lend%04d", label);
+    cprintf(".Lelse%04d:", label);
+    gen(node->else_clause);
     cprintf(".Lend%04d:", label);
     return;
   }

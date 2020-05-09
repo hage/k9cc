@@ -14,6 +14,7 @@ typedef enum {
   TK_NUM,                       // 整数トークン
   TK_RETURN,                    // return
   TK_IF,                        // if
+  TK_ELSE,                      // else
   TK_EOF,                       // 入力の終わりを表すトークン
 } TokenKind;
 
@@ -41,6 +42,7 @@ typedef enum {
   ND_NUM,                       // 整数
   ND_RETURN,                    // return
   ND_IF,                        // if
+  ND_IFEL,                      // elseのあるif
 } NodeKind;
 
 // 抽象構文木のノードの型
@@ -49,6 +51,12 @@ struct Node {
   NodeKind kind;                // ノードの型
   Node *lhs;                    // 左辺
   Node *rhs;                    // 右辺
+
+  // if
+  Node *cond;
+  Node *then_clause;
+  Node *else_clause;
+
   int val;                      // kindがND_NUMの場合のみ使う
   size_t offset;                // kindがND_LVARの場合のみ使う
 };

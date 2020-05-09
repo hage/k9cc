@@ -125,6 +125,10 @@ Token *tokenize(char *p) {
     else if(tokenize_keyword("if", TK_IF, &cur, &p)) {
       continue;
     }
+    else if(tokenize_keyword("else", TK_ELSE, &cur, &p)) {
+      continue;
+    }
+
     // 変数
     if (is_1st_letter_of_symbol(*p)) {
       char *q = p;

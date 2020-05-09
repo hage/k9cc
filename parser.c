@@ -37,8 +37,11 @@ size_t lvar_top_offset() {
 
 ////////////////////////////////////////////////////////////////
 // create node
+static Node *alloc_node() {
+  return (Node *)calloc(1, sizeof(Node));
+}
 static Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
-  Node *node = calloc(1, sizeof(Node));
+  Node *node = alloc_node();
   node->kind = kind;
   node->lhs = lhs;
   node->rhs = rhs;
@@ -48,6 +51,15 @@ static Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
 static Node *new_node_num(int val) {
   Node *node = new_node(ND_NUM, NULL, NULL);
   node->val = val;
+  return node;
+}
+
+static Node *new_node_condition(Node *cond, Node *then, Node *els) {
+  Node *node = alloc_node();
+  node->cond = cond;
+  node->then_clause = then;
+  node->else_clause = els;
+  node->kind = els ? ND_IFEL : ND_IF;
   return node;
 }
 
@@ -82,10 +94,15 @@ static Node *stmt() {
   }
   else if (consume_kind(TK_IF)) {
     expect("(");
-    node = new_node(ND_IF, expr(), NULL);
+    Node *cond = expr();
     expect(")");
-    node->rhs = stmt();
-    return node;
+    Node *then = stmt();
+
+    Node *els = NULL;
+    if (consume_kind(TK_ELSE)) {
+      els = stmt();
+    }
+    return new_node_condition(cond, then, els);
   }
   else {
     node = expr();
