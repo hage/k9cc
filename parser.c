@@ -63,6 +63,14 @@ static Node *new_node_condition(Node *cond, Node *then, Node *els) {
   return node;
 }
 
+static Node *new_node_while(Node *cond, Node *then) {
+  Node *node = alloc_node();
+  node->cond = cond;
+  node->then_clause = then;
+  node->kind = ND_WHILE;
+  return node;
+}
+
 ////////////////////////////////////////////////////////////////
 // parser
 static Node *stmt();
@@ -103,6 +111,12 @@ static Node *stmt() {
       els = stmt();
     }
     return new_node_condition(cond, then, els);
+  }
+  else if (consume_kind(TK_WHILE)) {
+    expect("(");
+    Node *cond = expr();
+    expect(")");
+    return new_node_while(cond, stmt());
   }
   else {
     node = expr();

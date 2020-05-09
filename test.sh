@@ -18,6 +18,7 @@ assert () {
     fi
 }
 
+assert 55 'a=0;while(a<55)a=a+1;return a;'
 assert 42 'a=1;if(a==1)return 42; else return 0;'
 assert 0 'a=0;if(a==1)return 42; else return 0;'
 assert 42 'a=1;if(a==1)return 1+a*41;'

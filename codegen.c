@@ -83,6 +83,17 @@ static void gen(Node *node) {
     gen(node->else_clause);
     cprintf(".Lend%04d:", label);
     return;
+  case ND_WHILE:
+    label = new_label();
+    cprintf(".Lcontinue%04d:", label);
+    gen(node->cond);
+    cprintf("pop rax");
+    cprintf("cmp rax, 0");
+    cprintf("je .Lend%04d", label);
+    gen(node->then_clause);
+    cprintf("jmp .Lcontinue%04d", label);
+    cprintf(".Lend%04d:", label);
+    return;
   }
   gen(node->lhs);
   gen(node->rhs);
