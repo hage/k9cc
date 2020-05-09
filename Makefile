@@ -2,6 +2,8 @@ CFLAGS=-std=c11 -g -static
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o)
 
+default: test
+
 k9cc: $(OBJS)
 	$(CC) -o k9cc $(OBJS) $(LDFLAGS)
 
@@ -21,4 +23,4 @@ sh:
 build:
 	docker build -t compilerbook https://www.sigbus.info/compilerbook/Dockerfile
 
-.PHONY: sh build test clean
+.PHONY: sh build test clean default
