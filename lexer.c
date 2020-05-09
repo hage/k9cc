@@ -122,13 +122,13 @@ Token *tokenize(char *p) {
     if (tokenize_keyword("return", TK_RETURN, &cur, &p)) {
       continue;
     }
-    else if(tokenize_keyword("if", TK_IF, &cur, &p)) {
+    else if (tokenize_keyword("if", TK_IF, &cur, &p)) {
       continue;
     }
-    else if(tokenize_keyword("else", TK_ELSE, &cur, &p)) {
+    else if (tokenize_keyword("else", TK_ELSE, &cur, &p)) {
       continue;
     }
-    else if(tokenize_keyword("while", TK_WHILE, &cur, &p)) {
+    else if (tokenize_keyword("while", TK_WHILE, &cur, &p)) {
       continue;
     }
 
