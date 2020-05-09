@@ -71,6 +71,13 @@ static Node *new_node_while(Node *cond, Node *then) {
   return node;
 }
 
+static Node *new_node_block() {
+  Node *node = alloc_node();
+  node->kind = ND_BLOCK;
+  node->code = calloc(100, sizeof(Node *));
+  return node;
+}
+
 ////////////////////////////////////////////////////////////////
 // parser
 static Node *stmt();
@@ -98,7 +105,20 @@ Node **program() {
 static Node *stmt() {
   Node *node;
 
-  if (consume_kind(TK_RETURN)) {
+  if (consume("{")) {
+    node = new_node_block();
+    for (int i = 0; ; i++) {
+      if (at_eof()) {
+        error("ブロックが閉じていません");
+      }
+      if (consume("}")) {
+        node->code[i] = NULL;
+        return node;
+      }
+      node->code[i] = stmt();
+    }
+  }
+  else if (consume_kind(TK_RETURN)) {
     node = new_node(ND_RETURN, expr(), NULL);
   }
   else if (consume_kind(TK_IF)) {

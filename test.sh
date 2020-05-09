@@ -18,6 +18,8 @@ assert () {
     fi
 }
 
+assert 10 'while(0){1;}return 10;'
+assert 110 'r=0;for(a=0;a<=10;a=a+1){r=r+a;r=r+a;} return r;'
 assert 42 'for(a=0;a<42;a=a+1)a;return a;'
 assert 55 'a=0;while(a<55)a=a+1;return a;'
 assert 42 'a=1;if(a==1)return 42; else return 0;'
