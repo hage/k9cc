@@ -94,6 +94,23 @@ static void gen(Node *node) {
     cprintf("jmp .Lcontinue%04d", label);
     cprintf(".Lend%04d:", label);
     return;
+  case ND_FOR:
+    label = new_label();
+    if (node->for_init) {
+      gen(node->for_init);
+    }
+    cprintf(".Lcontinue%04d:", label);
+
+    gen(node->for_cond);
+    cprintf("pop rax");
+    cprintf("cmp rax, 0");
+    cprintf("je .Lend%04d", label);
+    gen(node->for_stmt);
+    gen(node->for_advance);
+    cprintf("jmp .Lcontinue%04d", label);
+
+    cprintf(".Lend%04d:", label);
+    return;
   }
   gen(node->lhs);
   gen(node->rhs);

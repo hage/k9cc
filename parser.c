@@ -97,6 +97,7 @@ Node **program() {
 
 static Node *stmt() {
   Node *node;
+
   if (consume_kind(TK_RETURN)) {
     node = new_node(ND_RETURN, expr(), NULL);
   }
@@ -117,6 +118,37 @@ static Node *stmt() {
     Node *cond = expr();
     expect(")");
     return new_node_while(cond, stmt());
+  }
+  else if (consume_kind(TK_FOR)) {
+    node = alloc_node();
+    node->kind = ND_FOR;
+
+    expect("(");
+    if (consume_if_matched(";", TK_RESERVED)) {
+      node->for_init = NULL;
+    }
+    else {
+      node->for_init = expr();
+      expect(";");
+    }
+
+    if (consume_if_matched(";", TK_RESERVED)) {
+      node->for_cond = new_node_num(1); // trueを積む
+    }
+    else {
+      node->for_cond = expr();
+      expect(";");
+    }
+
+    if (consume_if_matched(")", TK_RESERVED)) {
+      node->for_advance = NULL;
+    }
+    else {
+      node->for_advance = expr();
+      expect(")");
+    }
+    node->for_stmt = stmt();
+    return node;
   }
   else {
     node = expr();

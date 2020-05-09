@@ -16,7 +16,9 @@ typedef enum {
   TK_IF,                        // if
   TK_ELSE,                      // else
   TK_WHILE,                     // while
+  TK_FOR,                       // for
   TK_EOF,                       // 入力の終わりを表すトークン
+  TK_NONE,                      // 何も意味しない特殊なトークン(peek系でkindを無視するときに使う)
 } TokenKind;
 
 typedef struct Token Token;
@@ -45,6 +47,7 @@ typedef enum {
   ND_IF,                        // if
   ND_IFEL,                      // elseのあるif
   ND_WHILE,                     // while
+  ND_FOR,                       // for
 } NodeKind;
 
 // 抽象構文木のノードの型
@@ -58,6 +61,12 @@ struct Node {
   Node *cond;
   Node *then_clause;
   Node *else_clause;
+
+  // for
+  Node *for_init;
+  Node *for_cond;
+  Node *for_advance;
+  Node *for_stmt;
 
   int val;                      // kindがND_NUMの場合のみ使う
   size_t offset;                // kindがND_LVARの場合のみ使う
@@ -82,6 +91,7 @@ void error_at(char *loc, char *fmt, ...);
 bool consume(char *op);
 Token *consume_kind(TokenKind kind);
 Token *consume_ident();
+bool consume_if_matched(char *op, TokenKind kind);
 void expect(char *op);
 int expect_number();
 bool at_eof();

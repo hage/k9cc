@@ -73,6 +73,25 @@ int expect_number() {
   return val;
 }
 
+// 次のトークンがopとkindに合致している場合にtrueを返し1つ読みすすめる。
+// opにNULLを渡したとき、kindにTK_NONEを渡したときそれぞれを無視する。
+// マッチしなくてもエラーにはならない。
+bool consume_if_matched(char *op, TokenKind kind) {
+  bool kind_match = kind == TK_NONE || kind == token->kind;
+  if (!op) {
+    token = token->next;
+    return kind_match;
+  }
+  else {
+    size_t len = strlen(op);
+    if (kind_match && len == token->len && memcmp(op, token->str, len)) {
+      token = token->next;
+      return true;
+    }
+    return false;
+  }
+}
+
 bool at_eof() {
   return token->kind == TK_EOF;
 }
@@ -129,6 +148,9 @@ Token *tokenize(char *p) {
       continue;
     }
     else if (tokenize_keyword("while", TK_WHILE, &cur, &p)) {
+      continue;
+    }
+    else if (tokenize_keyword("for", TK_FOR, &cur, &p)) {
       continue;
     }
 
