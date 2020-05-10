@@ -118,9 +118,6 @@ static Node *stmt() {
       node->code[i] = stmt();
     }
   }
-  else if (consume_kind(TK_RETURN)) {
-    node = new_node(ND_RETURN, expr(), NULL);
-  }
   else if (consume_kind(TK_IF)) {
     expect("(");
     Node *cond = expr();
@@ -170,11 +167,16 @@ static Node *stmt() {
     node->for_stmt = stmt();
     return node;
   }
+  else if (consume_kind(TK_RETURN)) {
+    node = new_node(ND_RETURN, expr(), NULL);
+    expect(";");
+    return node;
+  }
   else {
     node = expr();
+    expect(";");
+    return node;
   }
-  expect(";");
-  return node;
 }
 
 static Node *expr() {
