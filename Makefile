@@ -2,7 +2,7 @@ CFLAGS=-std=c11 -g -static
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o)
 
-default: test
+default: k9cc
 
 k9cc: $(OBJS)
 	$(CC) -o k9cc $(OBJS) $(LDFLAGS)
