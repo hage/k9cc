@@ -14,6 +14,13 @@ static bool is_letter_of_symbol(int c) {
   return is_1st_letter_of_symbol(c) || isdigit(c);
 }
 
+const char *tokstrdup(Token *tok) {
+  char *str = malloc(tok->len + 1);
+  memcpy(str, tok->str, tok->len);
+  str[tok->len] = '\0';
+  return str;
+}
+
 /* トークンが期待している記号のときは
  * トークンを1つ読み進めて真を返す。
  * それ以外の場合は偽を返す */

@@ -282,18 +282,29 @@ static Node *primary() {
   // 変数のとき
   Token *tok = consume_ident();
   if (tok) {
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_LVAR;
-
-    LVar *lvar = find_lvar(tok);
-    if (lvar) {
-      node->offset = lvar->offset;
+    if (consume("(")) {
+      expect(")");
+      // 関数呼び出し
+      Node *node = alloc_node();
+      node->kind = ND_FUNCALL;
+      node->funcname = tokstrdup(tok);
+      return node;
     }
     else {
-      LVar *lvar = new_lvar(tok, 8);
-      node->offset = lvar->offset;
+      // 変数
+      Node *node = calloc(1, sizeof(Node));
+      node->kind = ND_LVAR;
+
+      LVar *lvar = find_lvar(tok);
+      if (lvar) {
+        node->offset = lvar->offset;
+      }
+      else {
+        LVar *lvar = new_lvar(tok, 8);
+        node->offset = lvar->offset;
+      }
+      return node;
     }
-    return node;
   }
 
   // そうでなければ数値のはず

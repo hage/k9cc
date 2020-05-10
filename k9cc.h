@@ -49,6 +49,7 @@ typedef enum {
   ND_WHILE,                     // while
   ND_FOR,                       // for
   ND_BLOCK,                     // {}
+  ND_FUNCALL,                   // 関数呼び出し
 } NodeKind;
 
 // 抽象構文木のノードの型
@@ -71,6 +72,9 @@ struct Node {
 
   // block
   Node **code;
+
+  // function name
+  const char *funcname;
 
   int val;                      // kindがND_NUMの場合のみ使う
   size_t offset;                // kindがND_LVARの場合のみ使う
@@ -100,6 +104,7 @@ void expect(char *op);
 int expect_number();
 bool at_eof();
 Token *tokenize(char *p);
+const char *tokstrdup(Token *tok);
 
 // parser.c
 Node **program();

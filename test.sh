@@ -18,6 +18,17 @@ assert () {
     fi
 }
 
+
+./$CC "foo();" > tmp.s
+cc -o tmp tmp.s test/test_primitive_func_call.c
+actual=`./tmp`
+if [ "$actual" = "hello" ]; then
+    echo "OK"
+else
+    echo not hello
+    exit 1
+fi
+
 assert 10 'while(0){1;}return 10;'
 assert 110 'r=0;for(a=0;a<=10;a=a+1){r=r+a;r=r+a;} return r;'
 assert 42 'for(a=0;a<42;a=a+1)a;return a;'

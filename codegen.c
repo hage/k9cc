@@ -117,6 +117,10 @@ static void gen(Node *node) {
       cprintf("pop rax");
     }
     return;
+  case ND_FUNCALL:
+    cprintf("call %s", node->funcname);
+    cprintf("pop rax");
+    return;
   }
   gen(node->lhs);
   gen(node->rhs);
