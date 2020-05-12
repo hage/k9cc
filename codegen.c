@@ -1,19 +1,22 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include "k9cc.h"
 
+static FILE *fpout;
 
 static void cprintf(const char *fmt, ...) {
-  if (*fmt != '.') {            // ラベルのとき
-    printf("        ");
+  size_t len = strlen(fmt);
+  if (*fmt != '.' && (0 < len && fmt[len - 1] != ':')) {            // ラベルのとき
+    fprintf(fpout, "        ");
   }
   va_list ap;
   va_start(ap, fmt);
-  vprintf(fmt, ap);
+  vfprintf(fpout, fmt, ap);
   va_end(ap);
-  printf("\n");
+  fprintf(fpout, "\n");
 }
 
 static int new_label() {
@@ -196,12 +199,14 @@ static void gen(Node *node) {
 }
 
 static void print_header(void) {
-  printf(".intel_syntax noprefix\n");
-  printf(".global main\n");
-  printf("main:\n");
+  cprintf(".intel_syntax noprefix");
+  cprintf(".global main");
+  cprintf("main:");
 }
 
-void codegen(Node **node) {
+void codegen(Node **node, FILE *fp) {
+  fpout = fp;
+
   // アセンブリ前半部分を出力
   print_header();
 

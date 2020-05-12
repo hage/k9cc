@@ -1,5 +1,5 @@
 #!/bin/bash
-CC=k9cc
+CC='k9cc -e'
 
 assert () {
     expected="$1"

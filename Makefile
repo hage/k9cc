@@ -23,4 +23,7 @@ sh:
 build:
 	docker build -t compilerbook https://www.sigbus.info/compilerbook/Dockerfile
 
+tags:
+	etags *.c *.h
+
 .PHONY: sh build test clean default

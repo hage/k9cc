@@ -1,6 +1,7 @@
 #ifndef K9CC_H
 #define K9CC_H
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -112,6 +113,6 @@ const char *tokstrdup(Token *tok);
 Node **program();
 size_t lvar_top_offset();
 // codegen.c
-void codegen(Node **node);
+void codegen(Node **node, FILE *fpout);
 
 #endif
