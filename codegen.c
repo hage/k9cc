@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "k9cc.h"
 
 
@@ -33,6 +34,16 @@ static void gen_lval(Node *node) {
   cprintf("mov rax, rbp");
   cprintf("sub rax, %d", node->offset);
   cprintf("push rax");
+}
+
+static void stack_to_param(int nparam) {
+  assert(0 <= nparam && nparam < MAX_NPARAMS);
+  static const char *regs[] = {
+    "rdi", "rsi", "rdx", "rcx", "r8", "r9"
+  };
+  for (--nparam; 0 <= nparam; nparam--) {
+    cprintf("pop %s", regs[nparam]);
+  }
 }
 
 static void gen(Node *node) {
@@ -117,10 +128,15 @@ static void gen(Node *node) {
       cprintf("pop rax");
     }
     return;
-  case ND_FUNCALL:
+  case ND_FUNCALL: {
+    int nparam;
+    for (nparam = 0; node->params[nparam]; nparam++) {
+      gen(node->params[nparam]);
+    }
+    stack_to_param(nparam);
     cprintf("call %s", node->funcname);
-    cprintf("pop rax");
-    return;
+    cprintf("push rax");
+    return;}
   }
   gen(node->lhs);
   gen(node->rhs);

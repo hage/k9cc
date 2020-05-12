@@ -75,11 +75,13 @@ struct Node {
 
   // function name
   const char *funcname;
+  Node **params;
 
   int val;                      // kindがND_NUMの場合のみ使う
   size_t offset;                // kindがND_LVARの場合のみ使う
 };
 
+#define MAX_NPARAMS 6           // パラメータの最大個数
 
 ////////////////////////////////////////////////////////////////
 // external valiables

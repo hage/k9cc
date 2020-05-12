@@ -18,16 +18,43 @@ assert () {
     fi
 }
 
+assert_stdout_linked() {
+    expected="$1"
+    source="$2"
+    input="$3"
+    ./$CC "$input" > tmp.s
+    cc -o tmp tmp.s $source
+    actual=`./tmp`
+    if [ "$actual" = "$expected" ]; then
+        echo "$input => $actual"
+    else
+        echo "$input => $expected expected, but got $actual"
+        exit 1
+        exit 1
+    fi
+}
 
-./$CC "foo();" > tmp.s
-cc -o tmp tmp.s test/test_primitive_func_call.c
-actual=`./tmp`
-if [ "$actual" = "hello" ]; then
-    echo "OK"
-else
-    echo not hello
-    exit 1
-fi
+assert_result_linked() {
+    expected="$1"
+    source="$2"
+    input="$3"
+    ./$CC "$input" > tmp.s
+    cc -o tmp tmp.s $source
+    ./tmp
+    actual="$?"
+    if [ "$actual" = "$expected" ]; then
+        echo "$input => $actual"
+    else
+        echo "$input => $expected expected, but got $actual"
+        exit 1
+        exit 1
+    fi
+}
+
+assert_stdout_linked '42' test/test_primitive_param_func.c "a=1;b=2;foo(30, 12);"
+assert_stdout_linked '42' test/test_primitive_param_func2.c "foo(12, 15, 2);"
+assert_result_linked '42' test/test_primitive_param_func2.c "a = foo(12, 15, 2); return a;"
+assert_stdout_linked 'hello' test/test_primitive_func_call.c "foo();"
 
 assert 10 'while(0){1;}return 10;'
 assert 110 'r=0;for(a=0;a<=10;a=a+1){r=r+a;r=r+a;} return r;'
