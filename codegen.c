@@ -130,11 +130,31 @@ static void gen(Node *node) {
     return;
   case ND_FUNCALL: {
     int nparam;
+    label = new_label();
+
+    // パラメータを設定する
     for (nparam = 0; node->params[nparam]; nparam++) {
       gen(node->params[nparam]);
     }
     stack_to_param(nparam);
+
+    // rspを16バイト境界に揃える
+    cprintf("mov rax, rsp");
+    cprintf("and rax, 31");
+    cprintf("jnz .Lnoalign%04d", label);
+
+    cprintf("mov rax, rsp");    // すでに16バイト境界に揃っていたとき
     cprintf("call %s", node->funcname);
+    cprintf("jmp .Lend%04d", label);
+
+    cprintf(".Lnoalign%04d:", label); //揃っていなかったとき
+    cprintf("sub rsp, 8");
+    cprintf("mov rax, 0");
+    cprintf("call %s", node->funcname);
+    cprintf("add rsp, 8");
+
+    // 出口
+    cprintf(".Lend%04d:", label);
     cprintf("push rax");
     return;}
   }
