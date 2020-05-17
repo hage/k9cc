@@ -53,6 +53,12 @@ typedef enum {
   ND_FUNCALL,                   // 関数呼び出し
 } NodeKind;
 
+// コード列
+typedef struct Code {
+  struct Node *node;
+  struct Code *next;
+} Code;
+
 // 抽象構文木のノードの型
 typedef struct Node Node;
 struct Node {
@@ -72,7 +78,7 @@ struct Node {
   Node *for_stmt;
 
   // block
-  Node **code;
+  Code *code;
 
   // function name
   const char *funcname;
@@ -84,12 +90,6 @@ struct Node {
 
 #define MAX_NPARAMS 6           // パラメータの最大個数
 
-
-// コード列
-typedef struct Code {
-  Node *node;
-  struct Code *next;
-} Code;
 
 ////////////////////////////////////////////////////////////////
 // external valiables

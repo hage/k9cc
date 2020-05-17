@@ -126,8 +126,8 @@ static void gen(Node *node) {
     cprintf(".Lend%04d:", label);
     return;
   case ND_BLOCK:
-    for (Node **n = node->code; *n; n++) {
-      gen(*n);
+    for (Code *pc = node->code; pc; pc = pc->next) {
+      gen(pc->node);
       cprintf("pop rax");
     }
     return;
