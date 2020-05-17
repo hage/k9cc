@@ -204,7 +204,7 @@ static void print_header(void) {
   cprintf("main:");
 }
 
-void codegen(Node **node, FILE *fp) {
+void codegen(Code *code, FILE *fp) {
   fpout = fp;
 
   // アセンブリ前半部分を出力
@@ -216,8 +216,8 @@ void codegen(Node **node, FILE *fp) {
   cprintf("sub rsp, %d", lvar_top_offset());
 
   // 抽象構文木を下りながらコード生成
-  for (int i = 0; node[i]; i++) {
-    gen(node[i]);
+  for (; code; code = code->next) {
+    gen(code->node);
   }
 
   // スタックトップ全体の値が残っているので

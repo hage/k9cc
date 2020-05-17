@@ -90,16 +90,22 @@ static Node *mul();
 static Node *unary();
 static Node *primary();
 
-Node *code[100];
+static Code *new_code(Node *node) {
+  Code *c = calloc(1, sizeof(Code));
+  c->node = node;
+  return c;
+}
 
-Node **program() {
+Code *program() {
   int i;
+  Code code, *pc = &code;
 
   for (i = 0; !at_eof(); i++) {
-    code[i] = stmt();
+    pc->next = new_code(stmt());
+    pc = pc->next;
   }
-  code[i] = NULL;
-  return code;
+  pc->next = NULL;
+  return code.next;
 }
 
 static Node *stmt() {

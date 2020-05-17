@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     error("引数の個数が正しくありません");
   }
   token = tokenize(user_input);
-  Node **node = program();
-  codegen(node, fpout);
+  Code *code = program();
+  codegen(code, fpout);
   return 0;
 }

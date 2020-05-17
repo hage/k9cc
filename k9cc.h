@@ -84,6 +84,13 @@ struct Node {
 
 #define MAX_NPARAMS 6           // パラメータの最大個数
 
+
+// コード列
+typedef struct Code {
+  Node *node;
+  struct Code *next;
+} Code;
+
 ////////////////////////////////////////////////////////////////
 // external valiables
 extern char *user_input;        // 入力プログラム
@@ -110,9 +117,9 @@ Token *tokenize(char *p);
 const char *tokstrdup(Token *tok);
 
 // parser.c
-Node **program();
+Code *program();
 size_t lvar_top_offset();
 // codegen.c
-void codegen(Node **node, FILE *fpout);
+void codegen(Code *code, FILE *fpout);
 
 #endif
