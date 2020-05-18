@@ -43,8 +43,8 @@ static Node *alloc_node() {
 static Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = alloc_node();
   node->kind = kind;
-  node->lhs = lhs;
-  node->rhs = rhs;
+  node->e.expr.lhs = lhs;
+  node->e.expr.rhs = rhs;
   return node;
 }
 

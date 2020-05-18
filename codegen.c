@@ -62,15 +62,15 @@ static void gen(Node *node) {
     cprintf("push rax");
     return;
   case ND_ASSIGN:
-    gen_lval(node->lhs);
-    gen(node->rhs);
+    gen_lval(node->e.expr.lhs);
+    gen(node->e.expr.rhs);
     cprintf("pop rdi");
     cprintf("pop rax");
     cprintf("mov [rax], rdi");
     cprintf("push rdi");
     return;
   case ND_RETURN:
-    gen(node->lhs);
+    gen(node->e.expr.lhs);
     cprintf("pop rax");
     cprintf("mov rsp, rbp");
     cprintf("pop rbp");
@@ -161,8 +161,8 @@ static void gen(Node *node) {
     cprintf("push rax");
     return;}
   }
-  gen(node->lhs);
-  gen(node->rhs);
+  gen(node->e.expr.lhs);
+  gen(node->e.expr.rhs);
 
   cprintf("pop rdi");
   cprintf("pop rax");

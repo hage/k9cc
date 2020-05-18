@@ -60,11 +60,19 @@ typedef struct Code {
 } Code;
 
 // 抽象構文木のノードの型
+// when Node Kind Expr
+typedef struct NKExpr {
+  struct Node *lhs;                    // 左辺
+  struct Node *rhs;                    // 右辺
+} NKExpr;
+
 typedef struct Node Node;
 struct Node {
   NodeKind kind;                // ノードの型
-  Node *lhs;                    // 左辺
-  Node *rhs;                    // 右辺
+
+  union {
+    NKExpr expr;
+  } e;
 
   // if
   Node *cond;
