@@ -53,34 +53,35 @@ typedef enum {
   ND_FUNCALL,                   // 関数呼び出し
 } NodeKind;
 
+
+// 抽象構文木のノードの型
+typedef struct Node Node;
+
 // コード列
 typedef struct Code {
-  struct Node *node;
+  Node *node;
   struct Code *next;
 } Code;
 
-// 抽象構文木のノードの型
-
 // NodeKind Expr
 typedef struct NKExpr {
-  struct Node *lhs;                    // 左辺
-  struct Node *rhs;                    // 右辺
+  Node *lhs;                    // 左辺
+  Node *rhs;                    // 右辺
 } NKExpr;
 
 // NodeKind If
 typedef struct NKIf {
-  struct Node *cond;
-  struct Node *then_clause;
-  struct Node *else_clause;
+  Node *cond;
+  Node *then_clause;
+  Node *else_clause;
 } NKIf;
 
 // NodeKind While
 typedef struct NKWhile {
-  struct Node *cond;
-  struct Node *body;
+  Node *cond;
+  Node *body;
 } NKWhile;
 
-typedef struct Node Node;
 struct Node {
   NodeKind kind;                // ノードの型
 
