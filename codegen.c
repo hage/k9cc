@@ -62,15 +62,15 @@ static void gen(Node *node) {
     cprintf("push rax");
     return;
   case ND_ASSIGN:
-    gen_lval(node->e.expr.lhs);
-    gen(node->e.expr.rhs);
+    gen_lval(node->expr.lhs);
+    gen(node->expr.rhs);
     cprintf("pop rdi");
     cprintf("pop rax");
     cprintf("mov [rax], rdi");
     cprintf("push rdi");
     return;
   case ND_RETURN:
-    gen(node->e.expr.lhs);
+    gen(node->expr.lhs);
     cprintf("pop rax");
     cprintf("mov rsp, rbp");
     cprintf("pop rbp");
@@ -78,49 +78,49 @@ static void gen(Node *node) {
     return;
   case ND_IF:
     label = new_label();
-    gen(node->e.ifst.cond);
+    gen(node->ifst.cond);
     cprintf("pop rax");
     cprintf("cmp rax, 0");
     cprintf("je .Lend%04d", label);
-    gen(node->e.ifst.then_clause);
+    gen(node->ifst.then_clause);
     cprintf(".Lend%04d:", label);
     return;
   case ND_IFEL:
     label = new_label();
-    gen(node->e.ifst.cond);
+    gen(node->ifst.cond);
     cprintf("pop rax");
     cprintf("cmp rax, 0");
     cprintf("je .Lelse%04d", label);
-    gen(node->e.ifst.then_clause);
+    gen(node->ifst.then_clause);
     cprintf("jmp .Lend%04d", label);
     cprintf(".Lelse%04d:", label);
-    gen(node->e.ifst.else_clause);
+    gen(node->ifst.else_clause);
     cprintf(".Lend%04d:", label);
     return;
   case ND_WHILE:
     label = new_label();
     cprintf(".Lcontinue%04d:", label);
-    gen(node->e.whilest.cond);
+    gen(node->whilest.cond);
     cprintf("pop rax");
     cprintf("cmp rax, 0");
     cprintf("je .Lend%04d", label);
-    gen(node->e.whilest.body);
+    gen(node->whilest.body);
     cprintf("jmp .Lcontinue%04d", label);
     cprintf(".Lend%04d:", label);
     return;
   case ND_FOR:
     label = new_label();
-    if (node->e.forst.init) {
-      gen(node->e.forst.init);
+    if (node->forst.init) {
+      gen(node->forst.init);
     }
     cprintf(".Lcontinue%04d:", label);
 
-    gen(node->e.forst.cond);
+    gen(node->forst.cond);
     cprintf("pop rax");
     cprintf("cmp rax, 0");
     cprintf("je .Lend%04d", label);
-    gen(node->e.forst.body);
-    gen(node->e.forst.advance);
+    gen(node->forst.body);
+    gen(node->forst.advance);
     cprintf("jmp .Lcontinue%04d", label);
 
     cprintf(".Lend%04d:", label);
@@ -161,8 +161,8 @@ static void gen(Node *node) {
     cprintf("push rax");
     return;}
   }
-  gen(node->e.expr.lhs);
-  gen(node->e.expr.rhs);
+  gen(node->expr.lhs);
+  gen(node->expr.rhs);
 
   cprintf("pop rdi");
   cprintf("pop rax");

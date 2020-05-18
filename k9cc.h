@@ -98,7 +98,7 @@ struct Node {
     NKIf ifst;                  // if statement
     NKWhile whilest;            // while statement
     NKFor forst;                // for statement
-  } e;
+  };
 
   // block
   Code *code;

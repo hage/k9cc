@@ -43,8 +43,8 @@ static Node *alloc_node() {
 static Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = alloc_node();
   node->kind = kind;
-  node->e.expr.lhs = lhs;
-  node->e.expr.rhs = rhs;
+  node->expr.lhs = lhs;
+  node->expr.rhs = rhs;
   return node;
 }
 
@@ -56,17 +56,17 @@ static Node *new_node_num(int val) {
 
 static Node *new_node_condition(Node *cond, Node *then, Node *els) {
   Node *node = alloc_node();
-  node->e.ifst.cond = cond;
-  node->e.ifst.then_clause = then;
-  node->e.ifst.else_clause = els;
+  node->ifst.cond = cond;
+  node->ifst.then_clause = then;
+  node->ifst.else_clause = els;
   node->kind = els ? ND_IFEL : ND_IF;
   return node;
 }
 
 static Node *new_node_while(Node *cond, Node *body) {
   Node *node = alloc_node();
-  node->e.whilest.cond = cond;
-  node->e.whilest.body = body;
+  node->whilest.cond = cond;
+  node->whilest.body = body;
   node->kind = ND_WHILE;
   return node;
 }
@@ -150,29 +150,29 @@ static Node *stmt() {
 
     expect("(");
     if (consume_if_matched(";", TK_RESERVED)) {
-      node->e.forst.init = NULL;
+      node->forst.init = NULL;
     }
     else {
-      node->e.forst.init = expr();
+      node->forst.init = expr();
       expect(";");
     }
 
     if (consume_if_matched(";", TK_RESERVED)) {
-      node->e.forst.cond = new_node_num(1); // trueを積む
+      node->forst.cond = new_node_num(1); // trueを積む
     }
     else {
-      node->e.forst.cond = expr();
+      node->forst.cond = expr();
       expect(";");
     }
 
     if (consume_if_matched(")", TK_RESERVED)) {
-      node->e.forst.advance = NULL;
+      node->forst.advance = NULL;
     }
     else {
-      node->e.forst.advance = expr();
+      node->forst.advance = expr();
       expect(")");
     }
-    node->e.forst.body = stmt();
+    node->forst.body = stmt();
     return node;
   }
   else if (consume_kind(TK_RETURN)) {
