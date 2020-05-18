@@ -150,29 +150,29 @@ static Node *stmt() {
 
     expect("(");
     if (consume_if_matched(";", TK_RESERVED)) {
-      node->for_init = NULL;
+      node->e.forst.init = NULL;
     }
     else {
-      node->for_init = expr();
+      node->e.forst.init = expr();
       expect(";");
     }
 
     if (consume_if_matched(";", TK_RESERVED)) {
-      node->for_cond = new_node_num(1); // trueを積む
+      node->e.forst.cond = new_node_num(1); // trueを積む
     }
     else {
-      node->for_cond = expr();
+      node->e.forst.cond = expr();
       expect(";");
     }
 
     if (consume_if_matched(")", TK_RESERVED)) {
-      node->for_advance = NULL;
+      node->e.forst.advance = NULL;
     }
     else {
-      node->for_advance = expr();
+      node->e.forst.advance = expr();
       expect(")");
     }
-    node->for_stmt = stmt();
+    node->e.forst.body = stmt();
     return node;
   }
   else if (consume_kind(TK_RETURN)) {

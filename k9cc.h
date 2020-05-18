@@ -82,6 +82,14 @@ typedef struct NKWhile {
   Node *body;
 } NKWhile;
 
+// NodeKind For
+typedef struct NKFor {
+  Node *init;
+  Node *cond;
+  Node *advance;
+  Node *body;
+} NKFor;
+
 struct Node {
   NodeKind kind;                // ノードの型
 
@@ -89,13 +97,8 @@ struct Node {
     NKExpr expr;                // expr
     NKIf ifst;                  // if statement
     NKWhile whilest;            // while statement
+    NKFor forst;                // for statement
   } e;
-
-  // for
-  Node *for_init;
-  Node *for_cond;
-  Node *for_advance;
-  Node *for_stmt;
 
   // block
   Code *code;

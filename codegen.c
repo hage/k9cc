@@ -110,17 +110,17 @@ static void gen(Node *node) {
     return;
   case ND_FOR:
     label = new_label();
-    if (node->for_init) {
-      gen(node->for_init);
+    if (node->e.forst.init) {
+      gen(node->e.forst.init);
     }
     cprintf(".Lcontinue%04d:", label);
 
-    gen(node->for_cond);
+    gen(node->e.forst.cond);
     cprintf("pop rax");
     cprintf("cmp rax, 0");
     cprintf("je .Lend%04d", label);
-    gen(node->for_stmt);
-    gen(node->for_advance);
+    gen(node->e.forst.body);
+    gen(node->e.forst.advance);
     cprintf("jmp .Lcontinue%04d", label);
 
     cprintf(".Lend%04d:", label);
