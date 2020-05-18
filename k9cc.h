@@ -60,24 +60,35 @@ typedef struct Code {
 } Code;
 
 // 抽象構文木のノードの型
-// when Node Kind Expr
+
+// NodeKind Expr
 typedef struct NKExpr {
   struct Node *lhs;                    // 左辺
   struct Node *rhs;                    // 右辺
 } NKExpr;
+
+// NodeKind If
+typedef struct NKIf {
+  struct Node *cond;
+  struct Node *then_clause;
+  struct Node *else_clause;
+} NKIf;
+
+// NodeKind While
+typedef struct NKWhile {
+  struct Node *cond;
+  struct Node *body;
+} NKWhile;
 
 typedef struct Node Node;
 struct Node {
   NodeKind kind;                // ノードの型
 
   union {
-    NKExpr expr;
+    NKExpr expr;                // expr
+    NKIf ifst;                  // if statement
+    NKWhile whilest;            // while statement
   } e;
-
-  // if
-  Node *cond;
-  Node *then_clause;
-  Node *else_clause;
 
   // for
   Node *for_init;

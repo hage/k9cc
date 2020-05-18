@@ -78,33 +78,33 @@ static void gen(Node *node) {
     return;
   case ND_IF:
     label = new_label();
-    gen(node->cond);
+    gen(node->e.ifst.cond);
     cprintf("pop rax");
     cprintf("cmp rax, 0");
     cprintf("je .Lend%04d", label);
-    gen(node->then_clause);
+    gen(node->e.ifst.then_clause);
     cprintf(".Lend%04d:", label);
     return;
   case ND_IFEL:
     label = new_label();
-    gen(node->cond);
+    gen(node->e.ifst.cond);
     cprintf("pop rax");
     cprintf("cmp rax, 0");
     cprintf("je .Lelse%04d", label);
-    gen(node->then_clause);
+    gen(node->e.ifst.then_clause);
     cprintf("jmp .Lend%04d", label);
     cprintf(".Lelse%04d:", label);
-    gen(node->else_clause);
+    gen(node->e.ifst.else_clause);
     cprintf(".Lend%04d:", label);
     return;
   case ND_WHILE:
     label = new_label();
     cprintf(".Lcontinue%04d:", label);
-    gen(node->cond);
+    gen(node->e.whilest.cond);
     cprintf("pop rax");
     cprintf("cmp rax, 0");
     cprintf("je .Lend%04d", label);
-    gen(node->then_clause);
+    gen(node->e.whilest.body);
     cprintf("jmp .Lcontinue%04d", label);
     cprintf(".Lend%04d:", label);
     return;

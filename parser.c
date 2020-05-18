@@ -56,17 +56,17 @@ static Node *new_node_num(int val) {
 
 static Node *new_node_condition(Node *cond, Node *then, Node *els) {
   Node *node = alloc_node();
-  node->cond = cond;
-  node->then_clause = then;
-  node->else_clause = els;
+  node->e.ifst.cond = cond;
+  node->e.ifst.then_clause = then;
+  node->e.ifst.else_clause = els;
   node->kind = els ? ND_IFEL : ND_IF;
   return node;
 }
 
-static Node *new_node_while(Node *cond, Node *then) {
+static Node *new_node_while(Node *cond, Node *body) {
   Node *node = alloc_node();
-  node->cond = cond;
-  node->then_clause = then;
+  node->e.whilest.cond = cond;
+  node->e.whilest.body = body;
   node->kind = ND_WHILE;
   return node;
 }
