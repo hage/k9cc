@@ -93,7 +93,7 @@ typedef struct NKFor {
 // NodeKind Funcall
 typedef struct NKFuncall {
   const char *funcname;
-  Node **params;
+  Code *params;                   // パラメータのリスト
 } NKFuncall;
 
 struct Node {

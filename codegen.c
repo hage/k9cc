@@ -40,7 +40,9 @@ static void gen_lval(Node *node) {
 }
 
 static void stack_to_param(int nparam) {
-  assert(0 <= nparam && nparam < MAX_NPARAMS);
+  if (MAX_NPARAMS < nparam) {
+    error("パラメータが%d個以上あります", MAX_NPARAMS + 1);
+  }
   static const char *regs[] = {
     "rdi", "rsi", "rdx", "rcx", "r8", "r9"
   };
@@ -132,12 +134,13 @@ static void gen(Node *node) {
     }
     return;
   case ND_FUNCALL: {
-    int nparam;
+    int nparam = 0;
     label = new_label();
 
     // パラメータを設定する
-    for (nparam = 0; node->funcall.params[nparam]; nparam++) {
-      gen(node->funcall.params[nparam]);
+    for (Code *param = node->funcall.params; param; param = param->next) {
+      gen(param->node);
+      nparam++;
     }
     stack_to_param(nparam);
 
