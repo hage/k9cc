@@ -293,17 +293,17 @@ static Node *primary() {
       // 関数呼び出し
       Node *node = alloc_node();
       node->kind = ND_FUNCALL;
-      node->funcname = tokstrdup(tok);
-      node->params = calloc(MAX_NPARAMS + 1, sizeof(Node*));
+      node->funcall.funcname = tokstrdup(tok);
+      node->funcall.params = calloc(MAX_NPARAMS + 1, sizeof(Node*));
 
       if (consume(")")) {
         return node;
       }
       int i = 0;
-      node->params[i++] = expr();
+      node->funcall.params[i++] = expr();
       while (i < MAX_NPARAMS) {
         if (consume(",")) {
-          node->params[i++] = expr();
+          node->funcall.params[i++] = expr();
         }
         else if (at_eof()) {
           error("関数呼び出しが閉じていません");

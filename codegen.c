@@ -136,8 +136,8 @@ static void gen(Node *node) {
     label = new_label();
 
     // パラメータを設定する
-    for (nparam = 0; node->params[nparam]; nparam++) {
-      gen(node->params[nparam]);
+    for (nparam = 0; node->funcall.params[nparam]; nparam++) {
+      gen(node->funcall.params[nparam]);
     }
     stack_to_param(nparam);
 
@@ -147,13 +147,13 @@ static void gen(Node *node) {
     cprintf("jnz .Lnoalign%04d", label);
 
     cprintf("mov rax, rsp");    // すでに16バイト境界に揃っていたとき
-    cprintf("call %s", node->funcname);
+    cprintf("call %s", node->funcall.funcname);
     cprintf("jmp .Lend%04d", label);
 
     cprintf(".Lnoalign%04d:", label); //揃っていなかったとき
     cprintf("sub rsp, 8");
     cprintf("mov rax, 0");
-    cprintf("call %s", node->funcname);
+    cprintf("call %s", node->funcall.funcname);
     cprintf("add rsp, 8");
 
     // 出口

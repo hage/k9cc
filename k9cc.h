@@ -90,6 +90,12 @@ typedef struct NKFor {
   Node *body;
 } NKFor;
 
+// NodeKind Funcall
+typedef struct NKFuncall {
+  const char *funcname;
+  Node **params;
+} NKFuncall;
+
 struct Node {
   NodeKind kind;                // ノードの型
 
@@ -98,14 +104,11 @@ struct Node {
     NKIf ifst;                  // if statement
     NKWhile whilest;            // while statement
     NKFor forst;                // for statement
+    NKFuncall funcall;          // function call
   };
 
   // block
-  Code *code;
-
-  // function name
-  const char *funcname;
-  Node **params;
+  Code *code;                 // block
 
   int val;                      // kindがND_NUMの場合のみ使う
   size_t offset;                // kindがND_LVARの場合のみ使う
