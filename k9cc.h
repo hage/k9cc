@@ -106,10 +106,9 @@ struct Node {
     NKFor forst;                // for statement
     NKFuncall funcall;          // function call
     Code *code;                 // block
+    int val;                    // kindがND_NUMの場合のみ使う
+    size_t offset;              // kindがND_LVARの場合のみ使う
   };
-
-  int val;                      // kindがND_NUMの場合のみ使う
-  size_t offset;                // kindがND_LVARの場合のみ使う
 };
 
 #define MAX_NPARAMS 6           // パラメータの最大個数
