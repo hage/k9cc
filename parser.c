@@ -95,6 +95,41 @@ static Code *new_code(Node *node) {
   return c;
 }
 
+// 関数のパラメータを切り出す
+static Node *funcparams(Token *tok) {
+  if (consume("(")) {
+    Node *node = alloc_node();
+    node->kind = ND_FUNCALL;
+    node->funcall.funcname = tokstrdup(tok);
+
+    if (consume(")")) {
+      return node;
+    }
+    node->funcall.params = calloc(1, sizeof(Code));
+    Code *param = node->funcall.params;
+    param->node = expr();
+    for (;;) {
+      if (consume(",")) {
+        Code *next_param = calloc(1, sizeof(Code));
+        next_param->node = expr();
+        param->next = next_param;
+        param = next_param;
+      }
+      else if (at_eof()) {
+        error("関数呼び出しが閉じていません");
+      }
+      else {
+        break;
+      }
+    }
+    expect(")");
+    return node;
+  }
+  else {
+    return NULL;
+  }
+}
+
 Code *program() {
   int i;
   Code code, *pc = &code;
@@ -289,33 +324,8 @@ static Node *primary() {
 
   Token *tok = consume_ident();
   if (tok) {
-    if (consume("(")) {
-      // 関数呼び出し
-      Node *node = alloc_node();
-      node->kind = ND_FUNCALL;
-      node->funcall.funcname = tokstrdup(tok);
-
-      if (consume(")")) {
-        return node;
-      }
-      node->funcall.params = calloc(1, sizeof(Code));
-      Code *param = node->funcall.params;
-      param->node = expr();
-      for (;;) {
-        if (consume(",")) {
-          Code *next_param = calloc(1, sizeof(Code));
-          next_param->node = expr();
-          param->next = next_param;
-          param = next_param;
-        }
-        else if (at_eof()) {
-          error("関数呼び出しが閉じていません");
-        }
-        else {
-          break;
-        }
-      }
-      expect(")");
+    Node *node = funcparams(tok);
+    if (node) {
       return node;
     }
     else {
