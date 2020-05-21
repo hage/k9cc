@@ -80,6 +80,7 @@ static Node *new_node_block() {
 ////////////////////////////////////////////////////////////////
 // parser
 static Node *stmt();
+static Node *block();
 static Node *expr();
 static Node *assign();
 static Node *equality();
@@ -145,21 +146,9 @@ Code *program() {
 static Node *stmt() {
   Node *node;
 
-  if (consume("{")) {
-    node = new_node_block();
-    Code code, *pc = &code;
-    for (;;) {
-      if (at_eof()) {
-        error("ブロックが閉じていません");
-      }
-      if (consume("}")) {
-        pc->next = NULL;
-        node->code = code.next;
-        return node;
-      }
-      pc->next = new_code(stmt());
-      pc = pc->next;
-    }
+  node = block();
+  if (node) {
+    return node;
   }
   else if (consume_kind(TK_IF)) {
     expect("(");
@@ -220,6 +209,26 @@ static Node *stmt() {
     expect(";");
     return node;
   }
+}
+
+static Node *block() {
+  if (consume("{")) {
+    Node *node = new_node_block();
+    Code code, *pc = &code;
+    for (;;) {
+      if (at_eof()) {
+        error("ブロックが閉じていません");
+      }
+      if (consume("}")) {
+        pc->next = NULL;
+        node->code = code.next;
+        return node;
+      }
+      pc->next = new_code(stmt());
+      pc = pc->next;
+    }
+  }
+  return NULL;
 }
 
 static Node *expr() {

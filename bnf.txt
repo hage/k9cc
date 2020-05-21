@@ -1,10 +1,11 @@
 program         = stmt*
 stmt            = expr ";"
-                | "{" stmt* "}"
+                | block
                 | "if" "(" expr ")" stmt ("else" stmt)?
                 | "while" "(" expr ")" stmt
                 | "for" "(" expr? ";" expr? ";" expr? ")" stmt
                 | "return" expr ";"
+block           = "{" stmt* "}"
 expr            = assign
 assign          = equality ("=" assign)?
 equality        = relational ("==" relational | "!=" relational)*
