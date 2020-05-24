@@ -37,11 +37,8 @@ size_t lvar_top_offset() {
 
 ////////////////////////////////////////////////////////////////
 // create node
-static Node *alloc_node() {
-  return (Node *)calloc(1, sizeof(Node));
-}
 static Node *new_node(NodeKind kind) {
-  Node *node = alloc_node();
+  Node *node = (Node *)calloc(1, sizeof(Node));
   node->kind = kind;
   return node;
 }
@@ -101,8 +98,7 @@ static Code *new_code(Node *node) {
 // 関数のパラメータを切り出す
 static Node *funcparams(Token *tok) {
   if (consume("(")) {
-    Node *node = alloc_node();
-    node->kind = ND_FUNCALL;
+    Node *node = new_node(ND_FUNCALL);
     node->funcall.funcname = tokstrdup(tok);
 
     if (consume(")")) {
@@ -171,8 +167,7 @@ static Node *stmt() {
     return new_node_while(cond, stmt());
   }
   else if (consume_kind(TK_FOR)) {
-    node = alloc_node();
-    node->kind = ND_FOR;
+    node = new_node(ND_FOR);
 
     expect("(");
     if (consume_if_matched(";", TK_RESERVED)) {
@@ -341,8 +336,7 @@ static Node *primary() {
     }
     else {
       // 変数
-      Node *node = calloc(1, sizeof(Node));
-      node->kind = ND_LVAR;
+      Node *node = new_node(ND_LVAR);
 
       LVar *lvar = find_lvar(tok);
       if (lvar) {
