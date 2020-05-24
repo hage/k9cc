@@ -60,11 +60,10 @@ static Node *new_node_num(int val) {
 }
 
 static Node *new_node_condition(Node *cond, Node *then, Node *els) {
-  Node *node = alloc_node();
+  Node *node = new_node(els ? ND_IFEL : ND_IF);
   node->ifst.cond = cond;
   node->ifst.then_clause = then;
   node->ifst.else_clause = els;
-  node->kind = els ? ND_IFEL : ND_IF;
   return node;
 }
 
