@@ -37,43 +37,42 @@ size_t lvar_top_offset() {
 
 ////////////////////////////////////////////////////////////////
 // create node
-static Node *alloc_node() {
-  return (Node *)calloc(1, sizeof(Node));
-}
-static Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
-  Node *node = alloc_node();
+static Node *new_node(NodeKind kind) {
+  Node *node = (Node *)calloc(1, sizeof(Node));
   node->kind = kind;
+  return node;
+}
+
+static Node *new_node_binop(NodeKind kind, Node *lhs, Node *rhs) {
+  Node *node = new_node(kind);
   node->expr.lhs = lhs;
   node->expr.rhs = rhs;
   return node;
 }
 
 static Node *new_node_num(int val) {
-  Node *node = new_node(ND_NUM, NULL, NULL);
+  Node *node = new_node_binop(ND_NUM, NULL, NULL);
   node->val = val;
   return node;
 }
 
 static Node *new_node_condition(Node *cond, Node *then, Node *els) {
-  Node *node = alloc_node();
+  Node *node = new_node(els ? ND_IFEL : ND_IF);
   node->ifst.cond = cond;
   node->ifst.then_clause = then;
   node->ifst.else_clause = els;
-  node->kind = els ? ND_IFEL : ND_IF;
   return node;
 }
 
 static Node *new_node_while(Node *cond, Node *body) {
-  Node *node = alloc_node();
+  Node *node = new_node(ND_WHILE);
   node->whilest.cond = cond;
   node->whilest.body = body;
-  node->kind = ND_WHILE;
   return node;
 }
 
 static Node *new_node_block() {
-  Node *node = alloc_node();
-  node->kind = ND_BLOCK;
+  Node *node = new_node(ND_BLOCK);
   return node;
 }
 
@@ -99,8 +98,7 @@ static Code *new_code(Node *node) {
 // 関数のパラメータを切り出す
 static Node *funcparams(Token *tok) {
   if (consume("(")) {
-    Node *node = alloc_node();
-    node->kind = ND_FUNCALL;
+    Node *node = new_node(ND_FUNCALL);
     node->funcall.funcname = tokstrdup(tok);
 
     if (consume(")")) {
@@ -169,8 +167,7 @@ static Node *stmt() {
     return new_node_while(cond, stmt());
   }
   else if (consume_kind(TK_FOR)) {
-    node = alloc_node();
-    node->kind = ND_FOR;
+    node = new_node(ND_FOR);
 
     expect("(");
     if (consume_if_matched(";", TK_RESERVED)) {
@@ -200,7 +197,7 @@ static Node *stmt() {
     return node;
   }
   else if (consume_kind(TK_RETURN)) {
-    node = new_node(ND_RETURN, expr(), NULL);
+    node = new_node_binop(ND_RETURN, expr(), NULL);
     expect(";");
     return node;
   }
@@ -238,7 +235,7 @@ static Node *expr() {
 static Node *assign() {
   Node *node = equality();
   if (consume("=")) {
-    node = new_node(ND_ASSIGN, node, assign());
+    node = new_node_binop(ND_ASSIGN, node, assign());
   }
   return node;
 }
@@ -248,10 +245,10 @@ static Node *equality() {
 
   for (;;) {
     if (consume("==")) {
-      node = new_node(ND_EQU, node, relational());
+      node = new_node_binop(ND_EQU, node, relational());
     }
     else if (consume("!=")) {
-      node = new_node(ND_NEQ, node, relational());
+      node = new_node_binop(ND_NEQ, node, relational());
     }
     else {
       return node;
@@ -264,16 +261,16 @@ static Node *relational() {
 
   for (;;) {
     if (consume("<")) {
-      node = new_node(ND_GRT, node, add());
+      node = new_node_binop(ND_GRT, node, add());
     }
     else if (consume(">")) {
-      node = new_node(ND_GRT, add(), node);
+      node = new_node_binop(ND_GRT, add(), node);
     }
     else if (consume("<=")) {
-      node = new_node(ND_GEQ, node, add());
+      node = new_node_binop(ND_GEQ, node, add());
     }
     else if (consume(">=")) {
-      node = new_node(ND_GEQ, add(), node);
+      node = new_node_binop(ND_GEQ, add(), node);
     }
     else {
       return node;
@@ -286,10 +283,10 @@ static Node *add() {
 
   for (;;) {
     if (consume("+")) {
-      node = new_node(ND_ADD, node, mul());
+      node = new_node_binop(ND_ADD, node, mul());
     }
     else if (consume("-")) {
-      node = new_node(ND_SUB, node, mul());
+      node = new_node_binop(ND_SUB, node, mul());
     }
     else {
       return node;
@@ -302,10 +299,10 @@ static Node *mul() {
 
   for (;;) {
     if (consume("*")) {
-      node = new_node(ND_MUL, node, unary());
+      node = new_node_binop(ND_MUL, node, unary());
     }
     else if (consume("/")) {
-      node = new_node(ND_DIV, node, unary());
+      node = new_node_binop(ND_DIV, node, unary());
     }
     else {
       return node;
@@ -318,7 +315,7 @@ static Node *unary() {
     return primary();
   }
   if (consume("-")) {
-    return new_node(ND_SUB, new_node_num(0), primary());
+    return new_node_binop(ND_SUB, new_node_num(0), primary());
   }
   return primary();
 }
@@ -339,8 +336,7 @@ static Node *primary() {
     }
     else {
       // 変数
-      Node *node = calloc(1, sizeof(Node));
-      node->kind = ND_LVAR;
+      Node *node = new_node(ND_LVAR);
 
       LVar *lvar = find_lvar(tok);
       if (lvar) {
