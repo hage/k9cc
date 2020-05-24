@@ -40,16 +40,21 @@ size_t lvar_top_offset() {
 static Node *alloc_node() {
   return (Node *)calloc(1, sizeof(Node));
 }
-static Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
+static Node *new_node(NodeKind kind) {
   Node *node = alloc_node();
   node->kind = kind;
+  return node;
+}
+
+static Node *new_node_binop(NodeKind kind, Node *lhs, Node *rhs) {
+  Node *node = new_node(kind);
   node->expr.lhs = lhs;
   node->expr.rhs = rhs;
   return node;
 }
 
 static Node *new_node_num(int val) {
-  Node *node = new_node(ND_NUM, NULL, NULL);
+  Node *node = new_node_binop(ND_NUM, NULL, NULL);
   node->val = val;
   return node;
 }
@@ -200,7 +205,7 @@ static Node *stmt() {
     return node;
   }
   else if (consume_kind(TK_RETURN)) {
-    node = new_node(ND_RETURN, expr(), NULL);
+    node = new_node_binop(ND_RETURN, expr(), NULL);
     expect(";");
     return node;
   }
@@ -238,7 +243,7 @@ static Node *expr() {
 static Node *assign() {
   Node *node = equality();
   if (consume("=")) {
-    node = new_node(ND_ASSIGN, node, assign());
+    node = new_node_binop(ND_ASSIGN, node, assign());
   }
   return node;
 }
@@ -248,10 +253,10 @@ static Node *equality() {
 
   for (;;) {
     if (consume("==")) {
-      node = new_node(ND_EQU, node, relational());
+      node = new_node_binop(ND_EQU, node, relational());
     }
     else if (consume("!=")) {
-      node = new_node(ND_NEQ, node, relational());
+      node = new_node_binop(ND_NEQ, node, relational());
     }
     else {
       return node;
@@ -264,16 +269,16 @@ static Node *relational() {
 
   for (;;) {
     if (consume("<")) {
-      node = new_node(ND_GRT, node, add());
+      node = new_node_binop(ND_GRT, node, add());
     }
     else if (consume(">")) {
-      node = new_node(ND_GRT, add(), node);
+      node = new_node_binop(ND_GRT, add(), node);
     }
     else if (consume("<=")) {
-      node = new_node(ND_GEQ, node, add());
+      node = new_node_binop(ND_GEQ, node, add());
     }
     else if (consume(">=")) {
-      node = new_node(ND_GEQ, add(), node);
+      node = new_node_binop(ND_GEQ, add(), node);
     }
     else {
       return node;
@@ -286,10 +291,10 @@ static Node *add() {
 
   for (;;) {
     if (consume("+")) {
-      node = new_node(ND_ADD, node, mul());
+      node = new_node_binop(ND_ADD, node, mul());
     }
     else if (consume("-")) {
-      node = new_node(ND_SUB, node, mul());
+      node = new_node_binop(ND_SUB, node, mul());
     }
     else {
       return node;
@@ -302,10 +307,10 @@ static Node *mul() {
 
   for (;;) {
     if (consume("*")) {
-      node = new_node(ND_MUL, node, unary());
+      node = new_node_binop(ND_MUL, node, unary());
     }
     else if (consume("/")) {
-      node = new_node(ND_DIV, node, unary());
+      node = new_node_binop(ND_DIV, node, unary());
     }
     else {
       return node;
@@ -318,7 +323,7 @@ static Node *unary() {
     return primary();
   }
   if (consume("-")) {
-    return new_node(ND_SUB, new_node_num(0), primary());
+    return new_node_binop(ND_SUB, new_node_num(0), primary());
   }
   return primary();
 }
