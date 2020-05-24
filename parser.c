@@ -68,10 +68,9 @@ static Node *new_node_condition(Node *cond, Node *then, Node *els) {
 }
 
 static Node *new_node_while(Node *cond, Node *body) {
-  Node *node = alloc_node();
+  Node *node = new_node(ND_WHILE);
   node->whilest.cond = cond;
   node->whilest.body = body;
-  node->kind = ND_WHILE;
   return node;
 }
 
