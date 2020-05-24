@@ -75,8 +75,7 @@ static Node *new_node_while(Node *cond, Node *body) {
 }
 
 static Node *new_node_block() {
-  Node *node = alloc_node();
-  node->kind = ND_BLOCK;
+  Node *node = new_node(ND_BLOCK);
   return node;
 }
 
