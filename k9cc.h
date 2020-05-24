@@ -93,11 +93,12 @@ typedef struct NKFor {
 // NodeKind Funcall
 typedef struct NKFuncall {
   const char *funcname;
-  Code *params;                   // パラメータのリスト
+  Node *args;                  // パラメータのリスト
 } NKFuncall;
 
 struct Node {
   NodeKind kind;                // ノードの型
+  Node *next;
 
   union {
     NKExpr expr;                // expr

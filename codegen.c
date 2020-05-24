@@ -138,8 +138,8 @@ static void gen(Node *node) {
     label = new_label();
 
     // パラメータを設定する
-    for (Code *param = node->funcall.params; param; param = param->next) {
-      gen(param->node);
+    for (Node *arg = node->funcall.args; arg; arg = arg->next) {
+      gen(arg);
       nparam++;
     }
     stack_to_param(nparam);

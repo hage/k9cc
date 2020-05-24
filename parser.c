@@ -104,24 +104,22 @@ static Node *funcparams(Token *tok) {
     if (consume(")")) {
       return node;
     }
-    node->funcall.params = calloc(1, sizeof(Code));
-    Code *param = node->funcall.params;
-    param->node = expr();
+    Node args, *cur = &args;
+    cur = cur->next = assign();
     for (;;) {
       if (consume(",")) {
-        Code *next_param = calloc(1, sizeof(Code));
-        next_param->node = expr();
-        param->next = next_param;
-        param = next_param;
+        cur = cur->next = assign();
       }
       else if (at_eof()) {
         error("関数呼び出しが閉じていません");
       }
       else {
+        cur->next = NULL;
         break;
       }
     }
     expect(")");
+    node->funcall.args = args.next;
     return node;
   }
   else {
