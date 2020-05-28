@@ -95,8 +95,8 @@ static Code *new_code(Node *node) {
   return c;
 }
 
-// 関数のパラメータを切り出す
-static Node *funcparams(Token *tok) {
+// 関数の実引数を切り出す
+static Node *funcargs(Token *tok) {
   if (consume("(")) {
     Node *node = new_node(ND_FUNCALL);
     node->funcall.funcname = tokstrdup(tok);
@@ -328,7 +328,7 @@ static Node *primary() {
 
   Token *tok = consume_ident();
   if (tok) {
-    Node *node = funcparams(tok);
+    Node *node = funcargs(tok);
     if (node) {
       return node;
     }
