@@ -12,10 +12,11 @@ LVar *find_lvar(LVar *locals, Token *tok) {
   return NULL;
 }
 
-LVar *new_lvar(LVar **plocals, Token *tok, size_t offset) {
+LVar *new_lvar(LVar **plocals, VarType type, Token *tok, size_t offset) {
   LVar *lvar = calloc(1, sizeof(LVar));
   lvar->next = *plocals;
   lvar->name = tok->str;
+  lvar->type = type;
   lvar->len = tok->len;
   lvar->offset = lvar_top_offset(*plocals) + offset;
   *plocals = lvar;
@@ -136,8 +137,25 @@ static Funcdef *funcdef() {
 
   if (tok) {
     fun->name = tokstrdup(tok);
+
+    // params
     expect("(");
+    Token *tok_param = consume_ident();
+    while (tok_param) {
+      new_lvar(&locals, VAR_PARAM, tok_param, 8);
+      if (consume(",")) {
+        tok_param = consume_ident();
+      }
+      else if (at_eof()) {
+        error_at_by_token(tok, "関数 %s の仮引数が閉じていません", fun->name);
+      }
+      else {
+	break;
+      }
+    }
     expect(")");
+
+    // body
     expect("{");
     for (;;) {
       if (at_eof()) {
@@ -356,7 +374,7 @@ static Node *primary(LVar **plocals) {
         node->offset = lvar->offset;
       }
       else {
-        LVar *lvar = new_lvar(plocals, tok, 8);
+        LVar *lvar = new_lvar(plocals, VAR_AUTO, tok, 8);
         node->offset = lvar->offset;
       }
       return node;

@@ -38,9 +38,14 @@ struct Token {
 };
 
 // Variables
+typedef enum {
+  VAR_AUTO,                     // 自動変数
+  VAR_PARAM,                    // 仮引数
+} VarType;
 typedef struct LVar {
   struct LVar *next;
   char *name;                   // 変数の名前
+  VarType type;                 // 変数のタイプ (ローカル変数、仮引数等)
   size_t len;                   // 名前の長さ
   size_t offset;                // RBPからのオフセット
 } LVar;

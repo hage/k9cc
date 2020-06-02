@@ -65,6 +65,8 @@ assert_num_by_source() {
     fi
 }
 
+assert_num_by_source '144' test/fib-144.c
+assert_num_by_source '43' test/num-43.c
 assert_num_by_source '42' test/num-42.c
 
 assert_stdout_linked '42'    test/test_primitive_param_func.c  "main () {a=1;b=2;return foo(30, 12);}"
