@@ -201,34 +201,34 @@ static void gen(Node *node) {
   cprintf("push rax");
 }
 
-static void print_header(void) {
-  cprintf(".intel_syntax noprefix");
-  cprintf(".global main");
-  cprintf("main:");
-}
-
-void codegen(Code *code, FILE *fp) {
-  fpout = fp;
+static void funcgen(Funcdef *fdef) {
+  Code *code = fdef->code;
 
   // アセンブリ前半部分を出力
-  print_header();
+  cprintf(".global %s", fdef->name);
+  cprintf("%s:", fdef->name);
 
   // プロローグ
   cprintf("push rbp");
   cprintf("mov rbp, rsp");
-  cprintf("sub rsp, %d", lvar_top_offset());
+  cprintf("sub rsp, %d", lvar_top_offset(fdef->locals));
 
   // 抽象構文木を下りながらコード生成
   for (; code; code = code->next) {
     gen(code->node);
   }
 
-  // スタックトップ全体の値が残っているので
-  // それをRAXに設定して関数からの返り値とする
-  cprintf("pop rax");
-
   // エピローグ
   cprintf("mov rsp, rbp");
   cprintf("pop rbp");
   cprintf("ret");
+}
+
+void codegen(Funcdef *fdef, FILE *fp) {
+  fpout = fp;
+  cprintf(".intel_syntax noprefix");
+  for (; fdef; fdef = fdef->next) {
+    // pp("%s", fdef->name);
+    funcgen(fdef);
+  }
 }

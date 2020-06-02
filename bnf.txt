@@ -1,4 +1,5 @@
-program         = stmt*
+program         = funcdef*
+funcdef         = ident "(" ")" "{" stmt* "}"
 stmt            = expr ";"
                 | block
                 | "if" "(" expr ")" stmt ("else" stmt)?
