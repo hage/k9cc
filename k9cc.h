@@ -22,6 +22,11 @@ typedef enum {
   TK_NONE,                      // 何も意味しない特殊なトークン(peek系でkindを無視するときに使う)
 } TokenKind;
 
+typedef struct TokWhere {
+  char *beg_line;               // 行頭
+  int column;                // カラム位置
+  int line;
+} TokWhere;
 typedef struct Token Token;
 struct Token {
   TokenKind kind;               // トークンの型
@@ -29,6 +34,7 @@ struct Token {
   int val;                      // kindがTK_NUMの時、その数値
   char *str;                    // トークン文字列
   size_t len;                   // トークンの長さ
+  TokWhere where;               // ファイルでの存在位置
 };
 
 // Variables
@@ -150,6 +156,7 @@ void pp(const char *fmt, ...);
 void error(const char *fmt, ...);
 void error_at(const char *loc, const char *fmt, ...);
 void error_at_by_token(Token *tok, const char *fmt, ...);
+void error_at_by_where(TokWhere where, const char *fmt, ...);
 
 // lexer.c
 bool consume(char *op);
