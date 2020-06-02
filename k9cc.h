@@ -31,6 +31,15 @@ struct Token {
   size_t len;                   // トークンの長さ
 };
 
+// Variables
+typedef struct LVar {
+  struct LVar *next;
+  char *name;                   // 変数の名前
+  size_t len;                   // 名前の長さ
+  size_t offset;                // RBPからのオフセット
+} LVar;
+
+
 // node
 typedef enum {
   ND_ADD,                       // +
@@ -55,13 +64,24 @@ typedef enum {
 
 
 // 抽象構文木のノードの型
+
 typedef struct Node Node;
+typedef struct Code Code;
+typedef struct Funcdef Funcdef;
 
 // コード列
-typedef struct Code {
+struct Code {
   Node *node;
-  struct Code *next;
-} Code;
+  Code *next;
+};
+
+struct Funcdef {
+  Funcdef *next;
+  const char *name;
+  Code *code;
+  LVar *locals;
+};
+
 
 // NodeKind Expr
 typedef struct NKExpr {
@@ -125,9 +145,11 @@ extern Token *token;            // 現在着目しているトークン
 // functions
 
 // report.c
+void warn(const char *fmt, ...);
 void pp(const char *fmt, ...);
 void error(const char *fmt, ...);
-void error_at(char *loc, char *fmt, ...);
+void error_at(const char *loc, const char *fmt, ...);
+void error_at_by_token(Token *tok, const char *fmt, ...);
 
 // lexer.c
 bool consume(char *op);
@@ -141,9 +163,9 @@ Token *tokenize(char *p);
 const char *tokstrdup(Token *tok);
 
 // parser.c
-Code *program();
-size_t lvar_top_offset();
+Funcdef *program();
+size_t lvar_top_offset(LVar *locals);
 // codegen.c
-void codegen(Code *code, FILE *fpout);
+void codegen(Funcdef *fdef, FILE *fpout);
 
 #endif

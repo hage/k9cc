@@ -3,16 +3,7 @@
 
 ////////////////////////////////////////////////////////////////
 // local variables
-typedef struct LVar {
-  struct LVar *next;
-  char *name;                   // 変数の名前
-  size_t len;                   // 名前の長さ
-  size_t offset;                // RBPからのオフセット
-} LVar;
-
-static LVar *locals;
-
-LVar *find_lvar(Token *tok) {
+LVar *find_lvar(LVar *locals, Token *tok) {
   for (LVar *var = locals; var; var = var->next) {
     if (var->len == tok->len && !memcmp(var->name, tok->str, var->len)) {
       return var;
@@ -21,17 +12,17 @@ LVar *find_lvar(Token *tok) {
   return NULL;
 }
 
-LVar *new_lvar(Token *tok, size_t offset) {
+LVar *new_lvar(LVar **plocals, Token *tok, size_t offset) {
   LVar *lvar = calloc(1, sizeof(LVar));
-  lvar->next = locals;
+  lvar->next = *plocals;
   lvar->name = tok->str;
   lvar->len = tok->len;
-  lvar->offset = lvar_top_offset() + offset;
-  locals = lvar;
+  lvar->offset = lvar_top_offset(*plocals) + offset;
+  *plocals = lvar;
   return lvar;
 }
 
-size_t lvar_top_offset() {
+size_t lvar_top_offset(LVar *locals) {
   return locals ? locals->offset : 0;
 }
 
@@ -78,16 +69,17 @@ static Node *new_node_block() {
 
 ////////////////////////////////////////////////////////////////
 // parser
-static Node *stmt();
-static Node *block();
-static Node *expr();
-static Node *assign();
-static Node *equality();
-static Node *relational();
-static Node *add();
-static Node *mul();
-static Node *unary();
-static Node *primary();
+static Funcdef *funcdef();
+static Node *stmt(LVar **plocals);
+static Node *block(LVar **plocals);
+static Node *expr(LVar **plocals);
+static Node *assign(LVar **plocals);
+static Node *equality(LVar **plocals);
+static Node *relational(LVar **plocals);
+static Node *add(LVar **plocals);
+static Node *mul(LVar **plocals);
+static Node *unary(LVar **plocals);
+static Node *primary(LVar **plocals);
 
 static Code *new_code(Node *node) {
   Code *c = calloc(1, sizeof(Code));
@@ -96,7 +88,7 @@ static Code *new_code(Node *node) {
 }
 
 // 関数の実引数を切り出す
-static Node *funcargs(Token *tok) {
+static Node *funcargs(Token *tok, LVar **plocals) {
   if (consume("(")) {
     Node *node = new_node(ND_FUNCALL);
     node->funcall.funcname = tokstrdup(tok);
@@ -105,10 +97,10 @@ static Node *funcargs(Token *tok) {
       return node;
     }
     Node args, *cur = &args;
-    cur = cur->next = assign();
+    cur = cur->next = assign(plocals);
     for (;;) {
       if (consume(",")) {
-        cur = cur->next = assign();
+        cur = cur->next = assign(plocals);
       }
       else if (at_eof()) {
         error("関数呼び出しが閉じていません");
@@ -127,42 +119,65 @@ static Node *funcargs(Token *tok) {
   }
 }
 
-Code *program() {
-  int i;
-  Code code, *pc = &code;
 
-  for (i = 0; !at_eof(); i++) {
-    pc->next = new_code(stmt());
-    pc = pc->next;
+Funcdef *program() {
+  Funcdef fun, *cur = &fun;
+  while (!at_eof()) {
+    cur = cur->next = funcdef();
   }
-  pc->next = NULL;
-  return code.next;
+  return fun.next;
 }
 
-static Node *stmt() {
+static Funcdef *funcdef() {
+  Code code, *cur = &code;
+  Funcdef *fun = calloc(1, sizeof(Funcdef));
+  Token *tok = consume_ident();
+  LVar *locals = NULL;
+
+  if (tok) {
+    fun->name = tokstrdup(tok);
+    expect("(");
+    expect(")");
+    expect("{");
+    for (;;) {
+      if (at_eof()) {
+        error_at_by_token(tok, "関数 %s が閉じていません", fun->name);
+      }
+      else if (consume("}")) {
+        break;
+      }
+      cur = cur->next = new_code(stmt(&locals));
+    }
+  }
+  fun->code = code.next;
+  fun->locals = locals;
+  return fun;
+}
+
+static Node *stmt(LVar **plocals) {
   Node *node;
 
-  node = block();
+  node = block(plocals);
   if (node) {
     return node;
   }
   else if (consume_kind(TK_IF)) {
     expect("(");
-    Node *cond = expr();
+    Node *cond = expr(plocals);
     expect(")");
-    Node *then = stmt();
+    Node *then = stmt(plocals);
 
     Node *els = NULL;
     if (consume_kind(TK_ELSE)) {
-      els = stmt();
+      els = stmt(plocals);
     }
     return new_node_condition(cond, then, els);
   }
   else if (consume_kind(TK_WHILE)) {
     expect("(");
-    Node *cond = expr();
+    Node *cond = expr(plocals);
     expect(")");
-    return new_node_while(cond, stmt());
+    return new_node_while(cond, stmt(plocals));
   }
   else if (consume_kind(TK_FOR)) {
     node = new_node(ND_FOR);
@@ -172,7 +187,7 @@ static Node *stmt() {
       node->forst.init = NULL;
     }
     else {
-      node->forst.init = expr();
+      node->forst.init = expr(plocals);
       expect(";");
     }
 
@@ -180,7 +195,7 @@ static Node *stmt() {
       node->forst.cond = new_node_num(1); // trueを積む
     }
     else {
-      node->forst.cond = expr();
+      node->forst.cond = expr(plocals);
       expect(";");
     }
 
@@ -188,25 +203,25 @@ static Node *stmt() {
       node->forst.advance = NULL;
     }
     else {
-      node->forst.advance = expr();
+      node->forst.advance = expr(plocals);
       expect(")");
     }
-    node->forst.body = stmt();
+    node->forst.body = stmt(plocals);
     return node;
   }
   else if (consume_kind(TK_RETURN)) {
-    node = new_node_binop(ND_RETURN, expr(), NULL);
+    node = new_node_binop(ND_RETURN, expr(plocals), NULL);
     expect(";");
     return node;
   }
   else {
-    node = expr();
+    node = expr(plocals);
     expect(";");
     return node;
   }
 }
 
-static Node *block() {
+static Node *block(LVar **plocals) {
   if (consume("{")) {
     Node *node = new_node_block();
     Code code, *pc = &code;
@@ -219,34 +234,34 @@ static Node *block() {
         node->code = code.next;
         return node;
       }
-      pc->next = new_code(stmt());
+      pc->next = new_code(stmt(plocals));
       pc = pc->next;
     }
   }
   return NULL;
 }
 
-static Node *expr() {
-  return assign();
+static Node *expr(LVar **plocals) {
+  return assign(plocals);
 }
 
-static Node *assign() {
-  Node *node = equality();
+static Node *assign(LVar **plocals) {
+  Node *node = equality(plocals);
   if (consume("=")) {
-    node = new_node_binop(ND_ASSIGN, node, assign());
+    node = new_node_binop(ND_ASSIGN, node, assign(plocals));
   }
   return node;
 }
 
-static Node *equality() {
-  Node *node = relational();
+static Node *equality(LVar **plocals) {
+  Node *node = relational(plocals);
 
   for (;;) {
     if (consume("==")) {
-      node = new_node_binop(ND_EQU, node, relational());
+      node = new_node_binop(ND_EQU, node, relational(plocals));
     }
     else if (consume("!=")) {
-      node = new_node_binop(ND_NEQ, node, relational());
+      node = new_node_binop(ND_NEQ, node, relational(plocals));
     }
     else {
       return node;
@@ -254,21 +269,21 @@ static Node *equality() {
   }
 }
 
-static Node *relational() {
-  Node *node = add();
+static Node *relational(LVar **plocals) {
+  Node *node = add(plocals);
 
   for (;;) {
     if (consume("<")) {
-      node = new_node_binop(ND_GRT, node, add());
+      node = new_node_binop(ND_GRT, node, add(plocals));
     }
     else if (consume(">")) {
-      node = new_node_binop(ND_GRT, add(), node);
+      node = new_node_binop(ND_GRT, add(plocals), node);
     }
     else if (consume("<=")) {
-      node = new_node_binop(ND_GEQ, node, add());
+      node = new_node_binop(ND_GEQ, node, add(plocals));
     }
     else if (consume(">=")) {
-      node = new_node_binop(ND_GEQ, add(), node);
+      node = new_node_binop(ND_GEQ, add(plocals), node);
     }
     else {
       return node;
@@ -276,15 +291,15 @@ static Node *relational() {
   }
 }
 
-static Node *add() {
-  Node *node = mul();
+static Node *add(LVar **plocals) {
+  Node *node = mul(plocals);
 
   for (;;) {
     if (consume("+")) {
-      node = new_node_binop(ND_ADD, node, mul());
+      node = new_node_binop(ND_ADD, node, mul(plocals));
     }
     else if (consume("-")) {
-      node = new_node_binop(ND_SUB, node, mul());
+      node = new_node_binop(ND_SUB, node, mul(plocals));
     }
     else {
       return node;
@@ -292,15 +307,15 @@ static Node *add() {
   }
 }
 
-static Node *mul() {
-  Node *node = unary();
+static Node *mul(LVar **plocals) {
+  Node *node = unary(plocals);
 
   for (;;) {
     if (consume("*")) {
-      node = new_node_binop(ND_MUL, node, unary());
+      node = new_node_binop(ND_MUL, node, unary(plocals));
     }
     else if (consume("/")) {
-      node = new_node_binop(ND_DIV, node, unary());
+      node = new_node_binop(ND_DIV, node, unary(plocals));
     }
     else {
       return node;
@@ -308,27 +323,27 @@ static Node *mul() {
   }
 }
 
-static Node *unary() {
+static Node *unary(LVar **plocals) {
   if (consume("+")) {
-    return primary();
+    return primary(plocals);
   }
   if (consume("-")) {
-    return new_node_binop(ND_SUB, new_node_num(0), primary());
+    return new_node_binop(ND_SUB, new_node_num(0), primary(plocals));
   }
-  return primary();
+  return primary(plocals);
 }
 
-static Node *primary() {
+static Node *primary(LVar **plocals) {
   // 次のトークンが"("なら"(" expr ")"のはず
   if (consume("(")) {
-    Node *node = expr();
+    Node *node = expr(plocals);
     expect(")");
     return node;
   }
 
   Token *tok = consume_ident();
   if (tok) {
-    Node *node = funcargs(tok);
+    Node *node = funcargs(tok, plocals);
     if (node) {
       return node;
     }
@@ -336,12 +351,12 @@ static Node *primary() {
       // 変数
       Node *node = new_node(ND_LVAR);
 
-      LVar *lvar = find_lvar(tok);
+      LVar *lvar = find_lvar(*plocals, tok);
       if (lvar) {
         node->offset = lvar->offset;
       }
       else {
-        LVar *lvar = new_lvar(tok, 8);
+        LVar *lvar = new_lvar(plocals, tok, 8);
         node->offset = lvar->offset;
       }
       return node;
