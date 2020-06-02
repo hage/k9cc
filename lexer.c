@@ -64,7 +64,7 @@ void expect(char *op) {
   if (token->kind != TK_RESERVED
       || token->len != strlen(op)
       || memcmp(token->str, op, token->len)) {
-    error_at(token->str, "'%c'ではありません", op);
+    error_at_by_token(token, "'%s'ではありません", op);
   }
   token = token->next;
 }
@@ -73,7 +73,7 @@ void expect(char *op) {
  * それ以外のときはエラーを報告する。 */
 int expect_number() {
   if (token->kind != TK_NUM) {
-    error_at(token->str, "数ではありません");
+    error_at_by_token(token, "数ではありません");
   }
   int val = token->val;
   token = token->next;
@@ -104,19 +104,21 @@ bool at_eof() {
 }
 
 // 新しいトークンを作成してcurにつなげる
-static Token *new_token(TokenKind kind, Token *cur, char *str, size_t len) {
+static Token *new_token(TokenKind kind, Token *cur, char *str, size_t len, TokWhere *where) {
   Token *tok = calloc(1, sizeof(Token));
   tok->kind = kind;
   tok->str = str;
   tok->len = len;
+  tok->where = *where;
+  tok->where.column += len;
   cur->next = tok;
   return tok;
 }
 
-static bool tokenize_keyword(const char *keyword, TokenKind kind, Token **pcur, char **pc) {
+static bool tokenize_keyword(const char *keyword, TokenKind kind, Token **pcur, char **pc, TokWhere *where) {
   size_t len = strlen(keyword);
   if (!strncmp(*pc, keyword, len) && !is_letter_of_symbol((*pc)[len])) {
-    *pcur = new_token(kind, *pcur, *pc, 0);
+    *pcur = new_token(kind, *pcur, *pc, 0, where);
     *pc += len;
     return true;
   }
@@ -138,27 +140,38 @@ Token *tokenize(char *p) {
   head.next = NULL;
   Token *cur = &head;
 
+  TokWhere where = {p, 1, 1};
+  where.beg_line = p;
+
   while (*p) {
     // 空白文字をスキップ
     if (isspace(*p)) {
+      if (*p == '\n') {
+        where.beg_line = p + 1;
+        where.line++;
+        where.column = 1;
+      }
+      else {
+	where.column++;
+      }
       p++;
       continue;
     }
 
     // return
-    if (tokenize_keyword("return", TK_RETURN, &cur, &p)) {
+    if (tokenize_keyword("return", TK_RETURN, &cur, &p, &where)) {
       continue;
     }
-    else if (tokenize_keyword("if", TK_IF, &cur, &p)) {
+    else if (tokenize_keyword("if", TK_IF, &cur, &p, &where)) {
       continue;
     }
-    else if (tokenize_keyword("else", TK_ELSE, &cur, &p)) {
+    else if (tokenize_keyword("else", TK_ELSE, &cur, &p, &where)) {
       continue;
     }
-    else if (tokenize_keyword("while", TK_WHILE, &cur, &p)) {
+    else if (tokenize_keyword("while", TK_WHILE, &cur, &p, &where)) {
       continue;
     }
-    else if (tokenize_keyword("for", TK_FOR, &cur, &p)) {
+    else if (tokenize_keyword("for", TK_FOR, &cur, &p, &where)) {
       continue;
     }
 
@@ -167,7 +180,7 @@ Token *tokenize(char *p) {
       char *q = p;
       for (; *p && is_letter_of_symbol(*p); p++)
         ;
-      cur = new_token(TK_IDENT, cur, q, p - q);
+      cur = new_token(TK_IDENT, cur, q, p - q, &where);
       continue;
     }
 
@@ -176,7 +189,7 @@ Token *tokenize(char *p) {
     for (op = operators; *op; op++) {
       size_t len = strlen(*op);
       if (len <= strlen(p) && !memcmp(p, *op, len)) {
-        cur = new_token(TK_RESERVED, cur, p, len);
+        cur = new_token(TK_RESERVED, cur, p, len, &where);
         p += len;
         break;
       }
@@ -190,12 +203,12 @@ Token *tokenize(char *p) {
     if (isdigit(*p)) {
       char *org_p = p;
       int val = strtol(p, &p, 10);
-      cur = new_token(TK_NUM, cur, p, org_p - p);
+      cur = new_token(TK_NUM, cur, p, org_p - p, &where);
       cur->val = val;
       continue;
     }
-    error_at(p, "トークナイズできません");
+    error_at_by_where(where, "トークナイズできません");
   }
-  new_token(TK_EOF, cur, p, 0);
+  new_token(TK_EOF, cur, p, 0, &where);
   return head.next;
 }

@@ -7,6 +7,10 @@
 
 static FILE *fpout;
 
+static const char *param_regs[] = {
+  "rdi", "rsi", "rdx", "rcx", "r8", "r9"
+};
+
 static void cprintf(const char *fmt, ...) {
   size_t len = strlen(fmt);
   if (*fmt != '.' && (0 < len && fmt[len - 1] != ':')) {            // ラベルのとき
@@ -43,11 +47,8 @@ static void stack_to_param(int nparam) {
   if (MAX_NPARAMS < nparam) {
     error("パラメータが%d個以上あります", MAX_NPARAMS + 1);
   }
-  static const char *regs[] = {
-    "rdi", "rsi", "rdx", "rcx", "r8", "r9"
-  };
   for (--nparam; 0 <= nparam; nparam--) {
-    cprintf("pop %s", regs[nparam]);
+    cprintf("pop %s", param_regs[nparam]);
   }
 }
 
@@ -212,6 +213,28 @@ static void funcgen(Funcdef *fdef) {
   cprintf("push rbp");
   cprintf("mov rbp, rsp");
   cprintf("sub rsp, %d", lvar_top_offset(fdef->locals));
+
+  // 仮引数をスタックに積む
+  int nparam = 0;
+  LVar *lvar;
+  for (lvar = fdef->locals; lvar; lvar = lvar->next) {
+    if (lvar->type == VAR_PARAM) {
+      nparam++;
+    }
+  }
+  if (MAX_NPARAMS < nparam) {
+    error("パラメータが%d個以上あります", MAX_NPARAMS + 1);
+  }
+  for (lvar = fdef->locals; lvar; lvar = lvar->next) {
+    if (lvar->type == VAR_PARAM) {
+      nparam--;
+      const char *reg = param_regs[nparam];
+      cprintf("mov rax, rbp");
+      cprintf("sub rax, %d", lvar->offset);
+      cprintf("mov [rax], %s", reg);
+    }
+  }
+
 
   // 抽象構文木を下りながらコード生成
   for (; code; code = code->next) {
