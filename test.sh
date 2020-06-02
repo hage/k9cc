@@ -30,7 +30,6 @@ assert_stdout_linked() {
     else
         echo "$input => $expected expected, but got $actual"
         exit 1
-        exit 1
     fi
 }
 
