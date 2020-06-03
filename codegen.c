@@ -203,8 +203,6 @@ static void gen(Node *node) {
 }
 
 static void funcgen(Funcdef *fdef) {
-  Code *code = fdef->code;
-
   // アセンブリ前半部分を出力
   cprintf(".global %s", fdef->name);
   cprintf("%s:", fdef->name);
@@ -237,7 +235,7 @@ static void funcgen(Funcdef *fdef) {
 
 
   // 抽象構文木を下りながらコード生成
-  for (; code; code = code->next) {
+  for (Code *code = fdef->code; code; code = code->next) {
     gen(code->node);
   }
 

@@ -3,7 +3,7 @@
 
 ////////////////////////////////////////////////////////////////
 // local variables
-LVar *find_lvar(LVar *locals, Token *tok) {
+static LVar *find_lvar(LVar *locals, Token *tok) {
   for (LVar *var = locals; var; var = var->next) {
     if (var->len == tok->len && !memcmp(var->name, tok->str, var->len)) {
       return var;
@@ -12,7 +12,7 @@ LVar *find_lvar(LVar *locals, Token *tok) {
   return NULL;
 }
 
-LVar *new_lvar(LVar **plocals, VarType type, Token *tok, size_t offset) {
+static LVar *new_lvar(LVar **plocals, VarType type, Token *tok, size_t offset) {
   LVar *lvar = calloc(1, sizeof(LVar));
   lvar->next = *plocals;
   lvar->name = tok->str;
