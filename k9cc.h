@@ -71,6 +71,8 @@ typedef enum {
   ND_FOR,                       // for
   ND_BLOCK,                     // {}
   ND_FUNCALL,                   // 関数呼び出し
+  ND_ADDR,                      // 単項&; Node.lhsを使う
+  ND_DEREF,                     // 単項*; Node.lhsを使う
 } NodeKind;
 
 
@@ -132,6 +134,7 @@ struct Node {
   Node *next;
 
   union {
+    Node *lhs;                  // lhs
     NKExpr expr;                // expr
     NKIf ifst;                  // if statement
     NKWhile whilest;            // while statement

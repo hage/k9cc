@@ -65,6 +65,7 @@ assert_num_by_source() {
     fi
 }
 
+assert '42' 'main () {a=42;b=&a;return *b;}'
 assert_num_by_source '144' test/fib-144.c
 assert_num_by_source '43' test/num-43.c
 assert_num_by_source '42' test/num-42.c

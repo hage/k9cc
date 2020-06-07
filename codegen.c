@@ -58,6 +58,15 @@ static void gen(Node *node) {
   case ND_NUM:
     cprintf("push %d", node->val);
     return;
+  case ND_ADDR:
+    gen_lval(node->lhs);
+    return;
+  case ND_DEREF:
+    gen(node->lhs);
+    cprintf("pop rax");
+    cprintf("mov rax, [rax]");
+    cprintf("push rax");
+    return;
   case ND_LVAR:
     gen_lval(node);
     cprintf("pop rax");

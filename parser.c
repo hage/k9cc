@@ -348,6 +348,18 @@ static Node *unary(LVar **plocals) {
   if (consume("-")) {
     return new_node_binop(ND_SUB, new_node_num(0), primary(plocals));
   }
+  if (consume("*")) {
+    Node *node = new_node(ND_DEREF);
+    Node *u = unary(plocals);
+    node->lhs = u;
+    return node;
+  }
+  if (consume("&")) {
+    Node *node = new_node(ND_ADDR);
+    Node *u = unary(plocals);
+    node->lhs = u;
+    return node;
+  }
   return primary(plocals);
 }
 
