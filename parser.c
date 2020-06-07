@@ -386,8 +386,9 @@ static Node *primary(LVar **plocals) {
         node->offset = lvar->offset;
       }
       else {
-        LVar *lvar = new_lvar(plocals, VAR_AUTO, tok, 8);
-        node->offset = lvar->offset;
+        error_at_by_token(tok, "%s: 宣言していない変数です", tokstrdup(tok));
+        // LVar *lvar = new_lvar(plocals, VAR_AUTO, tok, 8);
+        // node->offset = lvar->offset;
       }
       return node;
     }
