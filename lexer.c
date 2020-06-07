@@ -140,7 +140,7 @@ Token *tokenize(char *p) {
   head.next = NULL;
   Token *cur = &head;
 
-  TokWhere where = {p};
+  TokWhere where = {p, 0, 0};
   where.beg_line = p;
 
   while (*p) {
