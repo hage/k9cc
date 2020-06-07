@@ -6,6 +6,7 @@ stmt            = expr ";"
                 | "while" "(" expr ")" stmt
                 | "for" "(" expr? ";" expr? ";" expr? ")" stmt
                 | "return" expr ";"
+                | "int" ident ";"
 block           = "{" stmt* "}"
 expr            = assign
 assign          = equality ("=" assign)?

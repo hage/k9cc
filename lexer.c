@@ -110,7 +110,7 @@ static Token *new_token(TokenKind kind, Token *cur, char *str, size_t len, TokWh
   tok->str = str;
   tok->len = len;
   tok->where = *where;
-  tok->where.column += len;
+  where->column += len;
   cur->next = tok;
   return tok;
 }
@@ -118,7 +118,7 @@ static Token *new_token(TokenKind kind, Token *cur, char *str, size_t len, TokWh
 static bool tokenize_keyword(const char *keyword, TokenKind kind, Token **pcur, char **pc, TokWhere *where) {
   size_t len = strlen(keyword);
   if (!strncmp(*pc, keyword, len) && !is_letter_of_symbol((*pc)[len])) {
-    *pcur = new_token(kind, *pcur, *pc, 0, where);
+    *pcur = new_token(kind, *pcur, *pc, len, where);
     *pc += len;
     return true;
   }
@@ -140,7 +140,7 @@ Token *tokenize(char *p) {
   head.next = NULL;
   Token *cur = &head;
 
-  TokWhere where = {p, 1, 1};
+  TokWhere where = {p};
   where.beg_line = p;
 
   while (*p) {
@@ -149,7 +149,7 @@ Token *tokenize(char *p) {
       if (*p == '\n') {
         where.beg_line = p + 1;
         where.line++;
-        where.column = 1;
+        where.column = 0;
       }
       else {
 	where.column++;
