@@ -1,7 +1,7 @@
-main() {
+int main() {
   return fib(12);
 }
-fib(n) {
+int fib(int n) {
   if (n == 1) {
     return 1;
   }

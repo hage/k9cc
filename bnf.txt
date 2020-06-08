@@ -1,5 +1,5 @@
 program         = funcdef*
-funcdef         = ident "(" (ident ("," ident)*)? ")" "{" stmt* "}"
+funcdef         = "int" ident "(" ("int" ident ("," "int" ident)*)? ")" "{" stmt* "}"
 stmt            = "int" ident ";"
                 | expr ";"
                 | block

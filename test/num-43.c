@@ -1,7 +1,7 @@
-main() {
+int main() {
   return foo(86, 2);
 }
-foo(a, b) {
+int foo(int a, int b) {
   int c;
   c = a;
   return c / b;

@@ -132,18 +132,26 @@ Funcdef *program() {
 static Funcdef *funcdef() {
   Code code, *cur = &code;
   Funcdef *fun = calloc(1, sizeof(Funcdef));
-  Token *tok = consume_ident();
   LVar *locals = NULL;
 
+  if (!consume_if_matched("int", TK_IDENT)) {
+    error_at_current("関数定義はintから始まっていなければなりません");
+  }
+  Token *tok = consume_ident();
   if (tok) {
     fun->name = tokstrdup(tok);
 
     // params
     expect_op("(");
+    bool typespec = consume_if_matched("int", TK_IDENT);
     Token *tok_param = consume_ident();
     while (tok_param) {
+      if (!typespec) {
+        error_at_current("仮引数の型にはintを指定しなければなりません");
+      }
       new_lvar(&locals, VAR_PARAM, tok_param, 8);
       if (consume(",")) {
+        typespec = consume_if_matched("int", TK_IDENT);
         tok_param = consume_ident();
       }
       else if (at_eof()) {
