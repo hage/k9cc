@@ -22,27 +22,17 @@ void pp(const char *fmt, ...) {
 void error(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
+  if (source_file) {
+    fprintf(stderr, "%s:", source_file);
+  }
   vfprintf(stderr, fmt, ap);
   fprintf(stderr, "\n");
   va_end(ap);
   exit(1);
 }
 
-void error_at(const char *loc, const char *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-
-  int pos = loc - user_input;
-  fprintf(stderr, "%s\n", user_input);
-  fprintf(stderr, "%*s", pos, ""); // pos個の空白を出力
-  fprintf(stderr, "^ ");
-  vfprintf(stderr, fmt, ap);
-  fprintf(stderr, "\n");
-  exit(1);
-}
-
 static void v_print_at_by_where(TokWhere where, const char *fmt, va_list ap) {
-  fprintf(stderr, "line: %d, column: %d\n", where.line, where.column);
+  fprintf(stderr, "%s:%d:%d\n", source_file, where.line, where.column);
   for (char *p = where.beg_line; *p && *p != '\n'; p++) {
     fputc(*p, stderr);
   }

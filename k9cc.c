@@ -8,6 +8,11 @@
 // 入力プログラム
 char *user_input;
 static char source_buffer[4096]; // ソースを保持するバッファ
+char *source_file;
+
+static char *mystrdup(const char *p) {
+  return strcpy(malloc(strlen(p) + 1), p);
+}
 
 // k9cc -e <code>
 // stdout | k9cc
@@ -20,6 +25,7 @@ int main(int argc, char **argv) {
 
   if (argc == 3) {
     // コマンドラインから
+    source_file = "<COMMAND-LINE>";
     if (!strcmp(argv[1], "-e")) {
       user_input = argv[2];
     }
@@ -29,27 +35,30 @@ int main(int argc, char **argv) {
   }
   else if (argc == 2) {
     // ファイルから
-    char *fname = argv[1];
-    size_t len = strlen(fname);
-    char *suffix = (argv[1] + len - 2);
-    if (2 <= len && !strcmp(suffix, ".c")) {
-      FILE *fpin = fopen(fname, "r");
+    source_file = argv[1];
+
+    char *out_file = mystrdup(source_file);
+    char *suffix = strrchr(out_file, '.');
+
+    if (suffix && !strcmp(suffix, ".c")) {
+      FILE *fpin = fopen(source_file, "r");
       if (!fpin) {
-        error("ファイル %s が見つかりません", fname);
+        error("ファイル %s が見つかりません", source_file);
       }
       fread(source_buffer, 1, sizeof(source_buffer), fpin);
       fclose(fpin);
 
       user_input = source_buffer;
       suffix[1] = 's';
-      fpout = fopen(fname, "w");
+      fpout = fopen(out_file, "w");
     }
     else {
-      error("%s はCのソースではありません", fname);
+      error("%s はCのソースではありません", source_file);
     }
   }
   else if (argc == 1) {
     // 標準入力から
+    source_file = "<STDIN>";
     fread(source_buffer, 1, sizeof(source_buffer), stdin);
     user_input = source_buffer;
   }

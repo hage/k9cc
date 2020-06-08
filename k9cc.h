@@ -162,7 +162,6 @@ extern Token *token;            // 現在着目しているトークン
 void warn(const char *fmt, ...);
 void pp(const char *fmt, ...);
 void error(const char *fmt, ...);
-void error_at(const char *loc, const char *fmt, ...);
 void error_at_by_token(Token *tok, const char *fmt, ...);
 void error_at_by_where(TokWhere where, const char *fmt, ...);
 
@@ -180,7 +179,11 @@ const char *tokstrdup(Token *tok);
 // parser.c
 Funcdef *program();
 size_t lvar_top_offset(LVar *locals);
+
 // codegen.c
 void codegen(Funcdef *fdef, FILE *fpout);
+
+// k9cc.c
+extern char *source_file;
 
 #endif
