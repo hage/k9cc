@@ -1,12 +1,12 @@
 program         = funcdef*
 funcdef         = ident "(" (ident ("," ident)*)? ")" "{" stmt* "}"
-stmt            = expr ";"
+stmt            = "int" ident ";"
+                | expr ";"
                 | block
                 | "if" "(" expr ")" stmt ("else" stmt)?
                 | "while" "(" expr ")" stmt
                 | "for" "(" expr? ";" expr? ";" expr? ")" stmt
                 | "return" expr ";"
-                | "int" ident ";"
 block           = "{" stmt* "}"
 expr            = assign
 assign          = equality ("=" assign)?

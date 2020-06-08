@@ -91,7 +91,7 @@ bool consume_if_matched(char *op, TokenKind kind) {
   }
   else {
     size_t len = strlen(op);
-    if (kind_match && len == token->len && memcmp(op, token->str, len)) {
+    if (kind_match && len == token->len && !memcmp(op, token->str, len)) {
       token = token->next;
       return true;
     }

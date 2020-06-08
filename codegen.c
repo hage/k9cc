@@ -55,6 +55,9 @@ static void stack_to_param(int nparam) {
 static void gen(Node *node) {
   int label;
   switch (node->kind) {
+  case ND_DECLARE:
+    // nothing to do
+    return;
   case ND_NUM:
     cprintf("push %d", node->val);
     return;

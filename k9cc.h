@@ -73,6 +73,7 @@ typedef enum {
   ND_FUNCALL,                   // 関数呼び出し
   ND_ADDR,                      // 単項&; Node.lhsを使う
   ND_DEREF,                     // 単項*; Node.lhsを使う
+  ND_DECLARE,                   // 変数の宣言
 } NodeKind;
 
 

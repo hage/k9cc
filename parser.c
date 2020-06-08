@@ -175,6 +175,19 @@ static Funcdef *funcdef() {
 static Node *stmt(LVar **plocals) {
   Node *node;
 
+  if (consume_if_matched("int", TK_IDENT)) {
+    Node *node = new_node(ND_DECLARE);
+    Token *tok = consume_ident();
+    if (tok) {
+      expect(";");
+      new_lvar(plocals, VAR_AUTO, tok, 8);
+    }
+    else {
+      error_at_by_token(token, "変数宣言には変数名が必要です");
+    }
+    return node;
+  }
+
   node = block(plocals);
   if (node) {
     return node;
@@ -387,8 +400,6 @@ static Node *primary(LVar **plocals) {
       }
       else {
         error_at_by_token(tok, "%s: 宣言していない変数です", tokstrdup(tok));
-        // LVar *lvar = new_lvar(plocals, VAR_AUTO, tok, 8);
-        // node->offset = lvar->offset;
       }
       return node;
     }

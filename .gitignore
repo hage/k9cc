@@ -2,6 +2,7 @@
 *~
 *.o
 *.out
+*.s
 tmp*
 k9cc
 /TAGS

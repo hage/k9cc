@@ -51,9 +51,10 @@ assert_result_linked() {
 assert_num_by_source() {
     expected="$1"
     source="$2"
+    assembly=${source%.c}.s
 
-    cat $source | ./$CC > tmp.s
-    cc -o tmp tmp.s
+    ./$CC $source
+    cc -o tmp $assembly
     ./tmp
     actual="$?"
     if [ "$actual" = "$expected" ]; then
@@ -65,28 +66,28 @@ assert_num_by_source() {
     fi
 }
 
-assert '42' 'main () {a=42;b=&a;return *b;}'
+assert '42' 'main () {int a; int b; a=42;b=&a;return *b;}'
 assert_num_by_source '144' test/fib-144.c
 assert_num_by_source '43' test/num-43.c
 assert_num_by_source '42' test/num-42.c
 
-assert_stdout_linked '42'    test/test_primitive_param_func.c  "main () {a=1;b=2;return foo(30, 12);}"
+assert_stdout_linked '42'    test/test_primitive_param_func.c  "main () {int a; int b; a=1;b=2;return foo(30, 12);}"
 assert_stdout_linked '42'    test/test_primitive_param_func2.c "main () {foo(12, 15, 2);}"
-assert_result_linked '42'    test/test_primitive_param_func2.c "main () {a = foo(12, 15, 2); return a;}"
+assert_result_linked '42'    test/test_primitive_param_func2.c "main () {int a; a = foo(12, 15, 2); return a;}"
 assert_stdout_linked 'hello' test/test_primitive_func_call.c   "main () {foo();}"
 
 assert '10' 'main () {while(0){1;}return 10;}'
-assert 110 'main () {r=0;for(a=0;a<=10;a=a+1){r=r+a;r=r+a;} return r;}'
-assert 42 'main () {for(a=0;a<42;a=a+1)a;return a;}'
-assert 55 'main () {a=0;while(a<55)a=a+1;return a;}'
-assert 42 'main () {a=1;if(a==1)return 42; else return 0;}'
-assert 0 'main () {a=0;if(a==1)return 42; else return 0;}'
-assert 42 'main () {a=1;if(a==1)return 1+a*41;}'
+assert 110 'main () {int r; int a; r=0;for(a=0;a<=10;a=a+1){r=r+a;r=r+a;} return r;}'
+assert 42 'main () {int a;for(a=0;a<42;a=a+1)a;return a;}'
+assert 55 'main () {int a; a=0;while(a<55)a=a+1;return a;}'
+assert 42 'main () {int a;a=1;if(a==1)return 42; else return 0;}'
+assert 0 'main () {int a;a=0;if(a==1)return 42; else return 0;}'
+assert 42 'main () {int a;a=1;if(a==1)return 1+a*41;}'
 assert 20 'main () {if(40*2==0)return 10;return 20;}';
 assert 42 'main () {return 42;}'
-assert 42 'main () {foo=33;bar=9;return foo+bar;10;}'
-assert 99 'main () {foo=33;bar=3;return foo*bar;}'
-assert 42 'main () {a0=1+1;a1=20;return a0+a1*2;}'
+assert 42 'main () {int foo;int bar;foo=33;bar=9;return foo+bar;10;}'
+assert 99 'main () {int foo;int bar;foo=33;bar=3;return foo*bar;}'
+assert 42 'main () {int a0;int a1;a0=1+1;a1=20;return a0+a1*2;}'
 assert 0 'main () {return 0;}'
 assert 42 'main () {return 42;}'
 assert 21 "main () {return 5+20-4;}"
