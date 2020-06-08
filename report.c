@@ -55,5 +55,12 @@ void error_at_by_token(Token *tok, const char *fmt, ...) {
   v_print_at_by_where(tok->where, fmt, ap);
   va_end(ap);
   exit(1);
+}
 
+void error_at_current(const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  v_print_at_by_where(token->where, fmt, ap);
+  va_end(ap);
+  exit(1);
 }

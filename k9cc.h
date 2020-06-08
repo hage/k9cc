@@ -165,6 +165,7 @@ void pp(const char *fmt, ...);
 void error(const char *fmt, ...);
 void error_at_by_token(Token *tok, const char *fmt, ...);
 void error_at_by_where(TokWhere where, const char *fmt, ...);
+void error_at_current(const char *fmt, ...);
 
 // lexer.c
 bool consume(char *op);
