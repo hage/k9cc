@@ -171,7 +171,7 @@ bool consume(char *op);
 Token *consume_kind(TokenKind kind);
 Token *consume_ident();
 bool consume_if_matched(char *op, TokenKind kind);
-void expect(char *op);
+void expect_op(char *op);
 int expect_number();
 bool at_eof();
 Token *tokenize(char *p);

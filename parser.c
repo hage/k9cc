@@ -111,7 +111,7 @@ static Node *funcargs(Token *tok, LVar **plocals) {
         break;
       }
     }
-    expect(")");
+    expect_op(")");
     node->funcall.args = args.next;
     return node;
   }
@@ -139,7 +139,7 @@ static Funcdef *funcdef() {
     fun->name = tokstrdup(tok);
 
     // params
-    expect("(");
+    expect_op("(");
     Token *tok_param = consume_ident();
     while (tok_param) {
       new_lvar(&locals, VAR_PARAM, tok_param, 8);
@@ -153,10 +153,10 @@ static Funcdef *funcdef() {
 	break;
       }
     }
-    expect(")");
+    expect_op(")");
 
     // body
-    expect("{");
+    expect_op("{");
     for (;;) {
       if (at_eof()) {
         error_at_by_token(tok, "関数 %s が閉じていません", fun->name);
@@ -179,7 +179,7 @@ static Node *stmt(LVar **plocals) {
     Node *node = new_node(ND_DECLARE);
     Token *tok = consume_ident();
     if (tok) {
-      expect(";");
+      expect_op(";");
       new_lvar(plocals, VAR_AUTO, tok, 8);
     }
     else {
@@ -193,9 +193,9 @@ static Node *stmt(LVar **plocals) {
     return node;
   }
   else if (consume_kind(TK_IF)) {
-    expect("(");
+    expect_op("(");
     Node *cond = expr(plocals);
-    expect(")");
+    expect_op(")");
     Node *then = stmt(plocals);
 
     Node *els = NULL;
@@ -205,21 +205,21 @@ static Node *stmt(LVar **plocals) {
     return new_node_condition(cond, then, els);
   }
   else if (consume_kind(TK_WHILE)) {
-    expect("(");
+    expect_op("(");
     Node *cond = expr(plocals);
-    expect(")");
+    expect_op(")");
     return new_node_while(cond, stmt(plocals));
   }
   else if (consume_kind(TK_FOR)) {
     node = new_node(ND_FOR);
 
-    expect("(");
+    expect_op("(");
     if (consume_if_matched(";", TK_RESERVED)) {
       node->forst.init = NULL;
     }
     else {
       node->forst.init = expr(plocals);
-      expect(";");
+      expect_op(";");
     }
 
     if (consume_if_matched(";", TK_RESERVED)) {
@@ -227,7 +227,7 @@ static Node *stmt(LVar **plocals) {
     }
     else {
       node->forst.cond = expr(plocals);
-      expect(";");
+      expect_op(";");
     }
 
     if (consume_if_matched(")", TK_RESERVED)) {
@@ -235,19 +235,19 @@ static Node *stmt(LVar **plocals) {
     }
     else {
       node->forst.advance = expr(plocals);
-      expect(")");
+      expect_op(")");
     }
     node->forst.body = stmt(plocals);
     return node;
   }
   else if (consume_kind(TK_RETURN)) {
     node = new_node_binop(ND_RETURN, expr(plocals), NULL);
-    expect(";");
+    expect_op(";");
     return node;
   }
   else {
     node = expr(plocals);
-    expect(";");
+    expect_op(";");
     return node;
   }
 }
@@ -380,7 +380,7 @@ static Node *primary(LVar **plocals) {
   // 次のトークンが"("なら"(" expr ")"のはず
   if (consume("(")) {
     Node *node = expr(plocals);
-    expect(")");
+    expect_op(")");
     return node;
   }
 

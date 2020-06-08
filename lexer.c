@@ -60,7 +60,7 @@ Token *consume_ident() {
 
 /* 次のトークンが期待している記号のときには、トークンを1つ読みすすめる。
  * それ以外のときはエラーを報告する */
-void expect(char *op) {
+void expect_op(char *op) {
   if (token->kind != TK_RESERVED
       || token->len != strlen(op)
       || memcmp(token->str, op, token->len)) {
