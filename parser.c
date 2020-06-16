@@ -134,7 +134,7 @@ static Funcdef *funcdef() {
   Funcdef *fun = calloc(1, sizeof(Funcdef));
   LVar *locals = NULL;
 
-  if (!consume_if_matched("int", TK_IDENT)) {
+  if (!consume_typespec()) {
     error_at_current("parser: 関数定義はintから始まっていなければなりません");
   }
   Token *tok = consume_ident();
@@ -143,7 +143,7 @@ static Funcdef *funcdef() {
 
     // params
     expect_op("(");
-    bool typespec = consume_if_matched("int", TK_IDENT);
+    bool typespec = consume_typespec();
     Token *tok_param = consume_ident();
     while (tok_param) {
       if (!typespec) {
@@ -151,7 +151,7 @@ static Funcdef *funcdef() {
       }
       new_lvar(&locals, VAR_PARAM, tok_param, 8);
       if (consume(",")) {
-        typespec = consume_if_matched("int", TK_IDENT);
+        typespec = consume_typespec();
         tok_param = consume_ident();
       }
       else if (at_eof()) {
@@ -183,7 +183,7 @@ static Funcdef *funcdef() {
 static Node *stmt(LVar **plocals) {
   Node *node;
 
-  if (consume_if_matched("int", TK_IDENT)) {
+  if (consume_typespec()) {
     Node *node = new_node(ND_DECLARE);
     Token *tok = consume_ident();
     if (tok) {

@@ -99,6 +99,16 @@ bool consume_if_matched(char *op, TokenKind kind) {
   }
 }
 
+/* 次のトークンが型指定のとき1つ読みすすめてtrueを返す。
+ * それ以外のときはfalseを返す */
+bool consume_typespec() {
+  if (token->kind == TK_T_INT) {
+    token = token->next;
+    return true;
+  }
+  return false;
+}
+
 bool at_eof() {
   return token->kind == TK_EOF;
 }
@@ -154,6 +164,11 @@ Token *tokenize(char *p) {
 	where.column++;
       }
       p++;
+      continue;
+    }
+
+    // typespecs
+    if (tokenize_keyword("int", TK_T_INT, &cur, &p, &where)) {
       continue;
     }
 

@@ -20,6 +20,7 @@ typedef enum {
   TK_FOR,                       // for
   TK_EOF,                       // 入力の終わりを表すトークン
   TK_NONE,                      // 何も意味しない特殊なトークン(peek系でkindを無視するときに使う)
+  TK_T_INT,                     // int型
 } TokenKind;
 
 typedef struct TokWhere {
@@ -172,6 +173,7 @@ bool consume(char *op);
 Token *consume_kind(TokenKind kind);
 Token *consume_ident();
 bool consume_if_matched(char *op, TokenKind kind);
+bool consume_typespec();
 void expect_op(char *op);
 int expect_number();
 bool at_eof();
