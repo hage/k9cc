@@ -64,7 +64,7 @@ void expect_op(char *op) {
   if (token->kind != TK_RESERVED
       || token->len != strlen(op)
       || memcmp(token->str, op, token->len)) {
-    error_at_by_token(token, "'%s'ではありません", op);
+    error_at_by_token(token, "lexer: '%s'ではありません", op);
   }
   token = token->next;
 }
@@ -73,7 +73,7 @@ void expect_op(char *op) {
  * それ以外のときはエラーを報告する。 */
 int expect_number() {
   if (token->kind != TK_NUM) {
-    error_at_by_token(token, "数ではありません");
+    error_at_by_token(token, "lexer: 数ではありません");
   }
   int val = token->val;
   token = token->next;
@@ -124,7 +124,6 @@ static bool tokenize_keyword(const char *keyword, TokenKind kind, Token **pcur, 
   }
   return false;
 }
-
 
 // 入力文字列pをトークナイズして返す
 Token *tokenize(char *p) {
@@ -207,7 +206,7 @@ Token *tokenize(char *p) {
       cur->val = val;
       continue;
     }
-    error_at_by_where(where, "トークナイズできません");
+    error_at_by_where(where, "lexer: トークナイズできません");
   }
   new_token(TK_EOF, cur, p, 0, &where);
   return head.next;

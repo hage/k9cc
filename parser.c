@@ -104,7 +104,7 @@ static Node *funcargs(Token *tok, LVar **plocals) {
         cur = cur->next = assign(plocals);
       }
       else if (at_eof()) {
-        error("関数呼び出しが閉じていません");
+        error("parser: 関数呼び出しが閉じていません");
       }
       else {
         cur->next = NULL;
@@ -135,7 +135,7 @@ static Funcdef *funcdef() {
   LVar *locals = NULL;
 
   if (!consume_if_matched("int", TK_IDENT)) {
-    error_at_current("関数定義はintから始まっていなければなりません");
+    error_at_current("parser: 関数定義はintから始まっていなければなりません");
   }
   Token *tok = consume_ident();
   if (tok) {
@@ -147,7 +147,7 @@ static Funcdef *funcdef() {
     Token *tok_param = consume_ident();
     while (tok_param) {
       if (!typespec) {
-        error_at_current("仮引数の型にはintを指定しなければなりません");
+        error_at_current("parser: 仮引数の型にはintを指定しなければなりません");
       }
       new_lvar(&locals, VAR_PARAM, tok_param, 8);
       if (consume(",")) {
@@ -155,7 +155,7 @@ static Funcdef *funcdef() {
         tok_param = consume_ident();
       }
       else if (at_eof()) {
-        error_at_by_token(tok, "関数 %s の仮引数が閉じていません", fun->name);
+        error_at_by_token(tok, "parser: 関数 %s の仮引数が閉じていません", fun->name);
       }
       else {
 	break;
@@ -167,7 +167,7 @@ static Funcdef *funcdef() {
     expect_op("{");
     for (;;) {
       if (at_eof()) {
-        error_at_by_token(tok, "関数 %s が閉じていません", fun->name);
+        error_at_by_token(tok, "parser: 関数 %s が閉じていません", fun->name);
       }
       else if (consume("}")) {
         break;
@@ -191,7 +191,7 @@ static Node *stmt(LVar **plocals) {
       new_lvar(plocals, VAR_AUTO, tok, 8);
     }
     else {
-      error_at_by_token(token, "変数宣言には変数名が必要です");
+      error_at_by_token(token, "parser: 変数宣言には変数名が必要です");
     }
     return node;
   }
@@ -266,7 +266,7 @@ static Node *block(LVar **plocals) {
     Code code, *pc = &code;
     for (;;) {
       if (at_eof()) {
-        error("ブロックが閉じていません");
+        error("parser: ブロックが閉じていません");
       }
       if (consume("}")) {
         pc->next = NULL;
@@ -407,7 +407,7 @@ static Node *primary(LVar **plocals) {
         node->offset = lvar->offset;
       }
       else {
-        error_at_by_token(tok, "%s: 宣言していない変数です", tokstrdup(tok));
+        error_at_by_token(tok, "parser: %s: 宣言していない変数です", tokstrdup(tok));
       }
       return node;
     }
