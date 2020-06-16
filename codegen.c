@@ -228,7 +228,7 @@ static void funcgen(Funcdef *fdef) {
   int nparam = 0;
   LVar *lvar;
   for (lvar = fdef->locals; lvar; lvar = lvar->next) {
-    if (lvar->type == VAR_PARAM) {
+    if (lvar->kind == VAR_PARAM) {
       nparam++;
     }
   }
@@ -236,7 +236,7 @@ static void funcgen(Funcdef *fdef) {
     error("パラメータが%d個以上あります", MAX_NPARAMS + 1);
   }
   for (lvar = fdef->locals; lvar; lvar = lvar->next) {
-    if (lvar->type == VAR_PARAM) {
+    if (lvar->kind == VAR_PARAM) {
       nparam--;
       const char *reg = param_regs[nparam];
       cprintf("mov rax, rbp");

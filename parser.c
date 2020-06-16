@@ -12,11 +12,11 @@ static LVar *find_lvar(LVar *locals, Token *tok) {
   return NULL;
 }
 
-static LVar *new_lvar(LVar **plocals, VarType type, Token *tok, size_t offset) {
+static LVar *new_lvar(LVar **plocals, LVarKind kind, Token *tok, size_t offset) {
   LVar *lvar = calloc(1, sizeof(LVar));
   lvar->next = *plocals;
   lvar->name = tok->str;
-  lvar->type = type;
+  lvar->kind = kind;
   lvar->len = tok->len;
   lvar->offset = lvar_top_offset(*plocals) + offset;
   *plocals = lvar;
