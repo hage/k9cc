@@ -65,7 +65,9 @@ assert_num_by_source() {
         exit 1
     fi
 }
-
+assert 22 'int main(){int a; int *b; int **c; b = &a; c = &b; **c = 22; return a;}'
+assert 21 'int main(){int z; int a; int *b; b = &a; 1 + 2; *b = 21; return a;}'
+assert 123 'int main() {int a; int ***b; return 123;}'
 assert '42' 'int main () {int a; int b; a=42;b=&a;return *b;}' &
 assert_num_by_source '144' test/fib-144.c &
 assert_num_by_source '43' test/num-43.c &

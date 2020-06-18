@@ -8,6 +8,13 @@
 ////////////////////////////////////////////////////////////////
 // typedef
 
+
+// Type
+typedef struct Type {
+  enum {INT, PTR} ty;
+  struct Type *ptr_to;
+} Type;
+
 // Variables
 typedef enum {
   VAR_AUTO,                     // 自動変数
@@ -19,6 +26,7 @@ typedef struct LVar {
   LVarKind kind;                 // 変数のタイプ (ローカル変数、仮引数等)
   size_t len;                   // 名前の長さ
   size_t offset;                // RBPからのオフセット
+  Type *ty;                     // type
 } LVar;
 
 
@@ -93,6 +101,7 @@ struct Code {
 struct Funcdef {
   Funcdef *next;
   const char *name;
+  Type *ty;
   Code *code;
   LVar *locals;
 };
@@ -183,6 +192,10 @@ const char *tokstrdup(Token *tok);
 // parser.c
 Funcdef *program();
 size_t lvar_top_offset(LVar *locals);
+
+// type.c
+Type *new_int_type();
+Type *pointer_to(Type *base);
 
 // codegen.c
 void codegen(Funcdef *fdef, FILE *fpout);

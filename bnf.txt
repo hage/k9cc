@@ -1,12 +1,13 @@
 program         = funcdef*
-funcdef         = "int" ident "(" ("int" ident ("," "int" ident)*)? ")" "{" stmt* "}"
-stmt            = "int" ident ";"
+funcdef         = basetype ident "(" (basetype" ident ("," basetype ident)*)? ")" "{" stmt* "}"
+stmt            = basetype ident ";"
                 | expr ";"
                 | block
                 | "if" "(" expr ")" stmt ("else" stmt)?
                 | "while" "(" expr ")" stmt
                 | "for" "(" expr? ";" expr? ";" expr? ")" stmt
                 | "return" expr ";"
+basetype        = "int" "*"*
 block           = "{" stmt* "}"
 expr            = assign
 assign          = equality ("=" assign)?
