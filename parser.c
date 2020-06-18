@@ -12,13 +12,14 @@ static LVar *find_lvar(LVar *locals, Token *tok) {
   return NULL;
 }
 
-static LVar *new_lvar(LVar **plocals, VarType type, Token *tok, size_t offset) {
+static LVar *new_lvar(LVar **plocals, Type *ty, LVarKind kind, Token *tok, size_t offset) {
   LVar *lvar = calloc(1, sizeof(LVar));
   lvar->next = *plocals;
   lvar->name = tok->str;
-  lvar->type = type;
+  lvar->kind = kind;
   lvar->len = tok->len;
   lvar->offset = lvar_top_offset(*plocals) + offset;
+  lvar->ty = ty;
   *plocals = lvar;
   return lvar;
 }
@@ -72,6 +73,7 @@ static Node *new_node_block() {
 // parser
 static Funcdef *funcdef();
 static Node *stmt(LVar **plocals);
+static Type *basetype();
 static Node *block(LVar **plocals);
 static Node *expr(LVar **plocals);
 static Node *assign(LVar **plocals);
@@ -104,7 +106,7 @@ static Node *funcargs(Token *tok, LVar **plocals) {
         cur = cur->next = assign(plocals);
       }
       else if (at_eof()) {
-        error("関数呼び出しが閉じていません");
+        error("parser: 関数呼び出しが閉じていません");
       }
       else {
         cur->next = NULL;
@@ -134,8 +136,9 @@ static Funcdef *funcdef() {
   Funcdef *fun = calloc(1, sizeof(Funcdef));
   LVar *locals = NULL;
 
-  if (!consume_if_matched("int", TK_IDENT)) {
-    error_at_current("関数定義はintから始まっていなければなりません");
+  fun->ty = basetype();
+  if (!fun->ty) {
+    error_at_current("parser: 関数定義は型指定から始まっていなければなりません");
   }
   Token *tok = consume_ident();
   if (tok) {
@@ -143,19 +146,19 @@ static Funcdef *funcdef() {
 
     // params
     expect_op("(");
-    bool typespec = consume_if_matched("int", TK_IDENT);
+    Type *ty = basetype();
     Token *tok_param = consume_ident();
     while (tok_param) {
-      if (!typespec) {
-        error_at_current("仮引数の型にはintを指定しなければなりません");
+      if (!ty) {
+        error_at_current("parser: 仮引数には型を指定しなければなりません");
       }
-      new_lvar(&locals, VAR_PARAM, tok_param, 8);
+      new_lvar(&locals, ty, VAR_PARAM, tok_param, 8);
       if (consume(",")) {
-        typespec = consume_if_matched("int", TK_IDENT);
+        ty = basetype();
         tok_param = consume_ident();
       }
       else if (at_eof()) {
-        error_at_by_token(tok, "関数 %s の仮引数が閉じていません", fun->name);
+        error_at_by_token(tok, "parser: 関数 %s の仮引数が閉じていません", fun->name);
       }
       else {
 	break;
@@ -167,7 +170,7 @@ static Funcdef *funcdef() {
     expect_op("{");
     for (;;) {
       if (at_eof()) {
-        error_at_by_token(tok, "関数 %s が閉じていません", fun->name);
+        error_at_by_token(tok, "parser: 関数 %s が閉じていません", fun->name);
       }
       else if (consume("}")) {
         break;
@@ -182,16 +185,17 @@ static Funcdef *funcdef() {
 
 static Node *stmt(LVar **plocals) {
   Node *node;
+  Type *ty = basetype();
 
-  if (consume_if_matched("int", TK_IDENT)) {
+  if (ty) {
     Node *node = new_node(ND_DECLARE);
     Token *tok = consume_ident();
     if (tok) {
       expect_op(";");
-      new_lvar(plocals, VAR_AUTO, tok, 8);
+      new_lvar(plocals, ty, VAR_AUTO, tok, 8);
     }
     else {
-      error_at_by_token(token, "変数宣言には変数名が必要です");
+      error_at_by_token(token, "parser: 変数宣言には変数名が必要です");
     }
     return node;
   }
@@ -260,13 +264,24 @@ static Node *stmt(LVar **plocals) {
   }
 }
 
+static Type *basetype() {
+  if (!consume_typespec()) {
+    return NULL;
+  }
+  Type *ty = new_int_type();
+  while (consume("*")) {
+    ty = pointer_to(ty);
+  }
+  return ty;
+}
+
 static Node *block(LVar **plocals) {
   if (consume("{")) {
     Node *node = new_node_block();
     Code code, *pc = &code;
     for (;;) {
       if (at_eof()) {
-        error("ブロックが閉じていません");
+        error("parser: ブロックが閉じていません");
       }
       if (consume("}")) {
         pc->next = NULL;
@@ -407,7 +422,7 @@ static Node *primary(LVar **plocals) {
         node->offset = lvar->offset;
       }
       else {
-        error_at_by_token(tok, "%s: 宣言していない変数です", tokstrdup(tok));
+        error_at_by_token(tok, "parser: %s: 宣言していない変数です", tokstrdup(tok));
       }
       return node;
     }

@@ -8,6 +8,28 @@
 ////////////////////////////////////////////////////////////////
 // typedef
 
+
+// Type
+typedef struct Type {
+  enum {INT, PTR} ty;
+  struct Type *ptr_to;
+} Type;
+
+// Variables
+typedef enum {
+  VAR_AUTO,                     // 自動変数
+  VAR_PARAM,                    // 仮引数
+} LVarKind;
+typedef struct LVar {
+  struct LVar *next;
+  char *name;                   // 変数の名前
+  LVarKind kind;                 // 変数のタイプ (ローカル変数、仮引数等)
+  size_t len;                   // 名前の長さ
+  size_t offset;                // RBPからのオフセット
+  Type *ty;                     // type
+} LVar;
+
+
 // Token
 typedef enum {
   TK_RESERVED,                  // 記号
@@ -20,6 +42,7 @@ typedef enum {
   TK_FOR,                       // for
   TK_EOF,                       // 入力の終わりを表すトークン
   TK_NONE,                      // 何も意味しない特殊なトークン(peek系でkindを無視するときに使う)
+  TK_T_INT,                     // int型
 } TokenKind;
 
 typedef struct TokWhere {
@@ -36,20 +59,6 @@ struct Token {
   size_t len;                   // トークンの長さ
   TokWhere where;               // ファイルでの存在位置
 };
-
-// Variables
-typedef enum {
-  VAR_AUTO,                     // 自動変数
-  VAR_PARAM,                    // 仮引数
-} VarType;
-typedef struct LVar {
-  struct LVar *next;
-  char *name;                   // 変数の名前
-  VarType type;                 // 変数のタイプ (ローカル変数、仮引数等)
-  size_t len;                   // 名前の長さ
-  size_t offset;                // RBPからのオフセット
-} LVar;
-
 
 // node
 typedef enum {
@@ -92,6 +101,7 @@ struct Code {
 struct Funcdef {
   Funcdef *next;
   const char *name;
+  Type *ty;
   Code *code;
   LVar *locals;
 };
@@ -172,6 +182,7 @@ bool consume(char *op);
 Token *consume_kind(TokenKind kind);
 Token *consume_ident();
 bool consume_if_matched(char *op, TokenKind kind);
+bool consume_typespec();
 void expect_op(char *op);
 int expect_number();
 bool at_eof();
@@ -181,6 +192,10 @@ const char *tokstrdup(Token *tok);
 // parser.c
 Funcdef *program();
 size_t lvar_top_offset(LVar *locals);
+
+// type.c
+Type *new_int_type();
+Type *pointer_to(Type *base);
 
 // codegen.c
 void codegen(Funcdef *fdef, FILE *fpout);

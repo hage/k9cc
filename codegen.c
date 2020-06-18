@@ -7,6 +7,8 @@
 
 static FILE *fpout;
 
+static void gen(Node *node);
+
 static const char *param_regs[] = {
   "rdi", "rsi", "rdx", "rcx", "r8", "r9"
 };
@@ -35,12 +37,17 @@ static void gen_relation(const char *instraction) {
 }
 
 static void gen_lval(Node *node) {
-  if (node->kind != ND_LVAR) {
+  if (node->kind == ND_DEREF) {
+    gen(node->lhs);
+  }
+  else if (node->kind == ND_LVAR) {
+    cprintf("mov rax, rbp");
+    cprintf("sub rax, %d", node->offset);
+    cprintf("push rax");
+  }
+  else {
     error("代入の左辺値が変数ではありません");
   }
-  cprintf("mov rax, rbp");
-  cprintf("sub rax, %d", node->offset);
-  cprintf("push rax");
 }
 
 static void stack_to_param(int nparam) {
@@ -228,7 +235,7 @@ static void funcgen(Funcdef *fdef) {
   int nparam = 0;
   LVar *lvar;
   for (lvar = fdef->locals; lvar; lvar = lvar->next) {
-    if (lvar->type == VAR_PARAM) {
+    if (lvar->kind == VAR_PARAM) {
       nparam++;
     }
   }
@@ -236,7 +243,7 @@ static void funcgen(Funcdef *fdef) {
     error("パラメータが%d個以上あります", MAX_NPARAMS + 1);
   }
   for (lvar = fdef->locals; lvar; lvar = lvar->next) {
-    if (lvar->type == VAR_PARAM) {
+    if (lvar->kind == VAR_PARAM) {
       nparam--;
       const char *reg = param_regs[nparam];
       cprintf("mov rax, rbp");
