@@ -25,10 +25,19 @@ void emit_head(void) {
 }
 
 ////////////////////////////////////////////////////////////////
+// report
+void error(const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+  exit(1);
+}
+
+////////////////////////////////////////////////////////////////
 int main(int argc, char **argv) {
   if (argc != 2) {
-    fputs("引数の個数が正しくありません\n", stderr);
-    return 1;
+    error("引数の個数が正しくありません\n");
   }
   char *p = argv[1];
   char *op;
@@ -46,8 +55,8 @@ int main(int argc, char **argv) {
       op = "sub";
       break;
     default:
-      fprintf(stderr, "予期しない文字です: %c\n", *p);
-      return 1;
+      error("予期しない文字です: %c\n", *p);
+      break;
     }
     p++;
     emit("%s rax, %ld", op, strtol(p, &p, 10));
