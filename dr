@@ -1,0 +1,10 @@
+#!/bin/bash
+# dr: docker-run
+
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
+if [ "$(uname)" = 'Linux' ]; then
+    $@
+else
+    echo $(pwd)
+    docker run --rm -v $SCRIPT_DIR:/home/user compilerbook $@
+fi
