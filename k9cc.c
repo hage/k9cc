@@ -11,15 +11,12 @@ void emit(const char *fmt, ...) {
     // ラベルなどでない通常のコードのとき
     fprintf(fpout, "        ");
   }
-
   va_list ap;
   va_start(ap, fmt);
   vfprintf(fpout, fmt, ap);
   va_end(ap);
   fprintf(fpout, "\n");
-
 }
-
 void emit_head(void) {
   emit(".intel_syntax noprefix");
   emit(".globl main");
