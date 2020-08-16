@@ -30,9 +30,28 @@ int main(int argc, char **argv) {
     fputs("引数の個数が正しくありません\n", stderr);
     return 1;
   }
+  char *p = argv[1];
+  char *op;
+
   emit_head();
   emit("main:");
-  emit("mov rax, %d", atoi(argv[1]));
+
+  emit("mov rax, %ld", strtol(p, &p, 10));
+  while (*p) {
+    switch (*p) {
+    case '+':
+      op = "add";
+      break;
+    case '-':
+      op = "sub";
+      break;
+    default:
+      fprintf(stderr, "予期しない文字です: %c\n", *p);
+      return 1;
+    }
+    p++;
+    emit("%s rax, %ld", op, strtol(p, &p, 10));
+  }
   emit("ret");
   return 0;
 }
