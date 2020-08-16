@@ -1,7 +1,11 @@
-.PHONY: sh build
+CFLAGS=-std=c11 -g -static
 
-sh:
-	docker run --rm -it -v $(shell pwd):/home/user compilerbook
+.PHONY: test clean
 
-build:
-	docker build -t compilerbook https://www.sigbus.info/compilerbook/Dockerfile
+k9cc: k9cc.c
+
+test: k9cc
+	./test.sh
+
+clean:
+	rm -f k9cc *.s tmp*
