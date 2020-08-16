@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+////////////////////////////////////////////////////////////////
+// code emit
 void emit(const char *fmt, ...) {
   FILE *fpout = stdout;
   size_t len = strlen(fmt);
@@ -22,6 +24,7 @@ void emit_head(void) {
   emit(".globl main");
 }
 
+////////////////////////////////////////////////////////////////
 int main(int argc, char **argv) {
   if (argc != 2) {
     fputs("引数の個数が正しくありません\n", stderr);
