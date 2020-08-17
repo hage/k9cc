@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include "k9cc.h"
 
 ////////////////////////////////////////////////////////////////
 // emit code
@@ -27,33 +28,7 @@ void emit_head(void) {
 }
 
 ////////////////////////////////////////////////////////////////
-// report
-void error(const char *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  vfprintf(stderr, fmt, ap);
-  va_end(ap);
-  exit(1);
-}
-
-////////////////////////////////////////////////////////////////
 // Token
-typedef enum {
-  TK_RESERVED,                  // Keywords or punctuators
-  TK_NUM,                       // Numeric literals
-  TK_EOF,                       // End-of-file markers
-} TokenKind;
-
-typedef struct Token Token;
-struct Token {
-  TokenKind kind;
-  Token *next;
-  long val;                     // kindがTK_NUMだったときその値
-  char *loc;                    // Token location
-  int len;                      // Token length
-};
-
-
 long get_number(Token *tok) {
   if (!tok || tok->kind != TK_NUM) {
     error("数字が必要です");
