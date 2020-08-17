@@ -16,11 +16,18 @@ struct Token {
   long val;                     // kindがTK_NUMだったときその値
   char *loc;                    // Token location
   int len;                      // Token length
+  int column;                   // ソース中の桁番号
 };
 
+////////////////////////////////////////////////////////////////
+/// k9cc.c
+extern char *current_input;
 
 ////////////////////////////////////////////////////////////////
-// report
+// report.c
 void error(const char *fmt, ...);
+void error_tok(Token *tok, const char *fmt, ...);
+void error_at(char *pos, const char *fmt, ...);
+
 
 #endif

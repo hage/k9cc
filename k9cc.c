@@ -29,9 +29,11 @@ void emit_head(void) {
 
 ////////////////////////////////////////////////////////////////
 // Token
+char *current_input;
+
 long get_number(Token *tok) {
   if (!tok || tok->kind != TK_NUM) {
-    error("数字が必要です");
+    error_tok(tok, "数字が必要です");
   }
   return tok->val;
 }
@@ -44,11 +46,12 @@ bool equal(Token *tok, const char *op) {
 }
 
 // tokenを作成してcurにつなげる
-Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
+Token *new_token(TokenKind kind, Token *cur, char *str, int len, int column) {
   Token *tok = calloc(1, sizeof(Token));
   tok->kind = kind;
   tok->loc = str;
   tok->len = len;
+  tok->column = column;
   cur->next = tok;
   return tok;
 }
@@ -56,16 +59,19 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
 Token *tokenize(char *p) {
   Token head = {};
   Token *cur = &head;
+  int column = 0;
 
+  current_input = p;
   while (*p) {
     if (isspace(*p)) {
       p++;
       continue;
     }
 
+    column = p - current_input;
     // 数字
     if (isdigit(*p)) {
-      cur = new_token(TK_NUM, cur, p, 0);
+      cur = new_token(TK_NUM, cur, p, 0, column);
       char *q = p;
       cur->val = strtol(p, &p, 10);
       cur->len = p - q;
@@ -74,12 +80,13 @@ Token *tokenize(char *p) {
 
     // 記号
     if (*p == '+' || *p == '-') {
-      cur = new_token(TK_RESERVED, cur, p++, 1);
+      cur = new_token(TK_RESERVED, cur, p, 1, column);
+      p++;
       continue;
     }
-    error("invalid token: %s", p);
+    error_at(p, "invalid token");
   }
-  new_token(TK_EOF, cur, p, 0);
+  new_token(TK_EOF, cur, p, 0, column);
   return head.next;
 }
 
@@ -108,7 +115,7 @@ int main(int argc, char **argv) {
       tok = tok->next->next;
       continue;
     }
-    error("unknown token: %s", tok->loc);
+    error_tok(tok, "unknown token");
   }
   emit("ret");
   return 0;
