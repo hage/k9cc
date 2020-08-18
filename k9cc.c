@@ -45,6 +45,13 @@ bool equal(Token *tok, const char *op) {
   return strlen(op) == tok->len && !strncmp(tok->loc, op, tok->len);
 }
 
+Token *skip(Token *tok, const char *op) {
+  if (!equal(tok, op)) {
+    error_tok(tok, "expected '%s'", op);
+  }
+  return tok->next;
+}
+
 // tokenを作成してcurにつなげる
 Token *new_token(TokenKind kind, Token *cur, char *str, int len, int column) {
   Token *tok = calloc(1, sizeof(Token));
@@ -79,7 +86,7 @@ Token *tokenize(char *p) {
     }
 
     // 記号
-    if (*p == '+' || *p == '-') {
+    if (strchr("+-*/()", *p)) {
       cur = new_token(TK_RESERVED, cur, p, 1, column);
       p++;
       continue;
@@ -91,32 +98,165 @@ Token *tokenize(char *p) {
 }
 
 ////////////////////////////////////////////////////////////////
+// parser
+typedef enum {
+  ND_ADD, // +
+  ND_SUB, // -
+  ND_MUL, // *
+  ND_DIV, // /
+  ND_NUM, // numeric
+} NodeKind;
+
+typedef struct Node Node;
+struct Node {
+  NodeKind kind;
+  Node *lhs;                    // 左辺
+  Node *rhs;                    // 右辺
+  int val;                      // ND_NUMのときに使う
+};
+
+Node *new_node(NodeKind kind) {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = kind;
+  return node;
+}
+
+Node *new_binary(NodeKind kind, Node *lhs, Node *rhs) {
+  Node *node = new_node(kind);
+  node->lhs = lhs;
+  node->rhs = rhs;
+  return node;
+}
+
+Node *new_num(long val) {
+  Node *node = new_node(ND_NUM);
+  node->val = val;
+  return node;
+}
+
+Node *expr(Token **rest, Token *tok);
+Node *mul(Token **rest, Token *tok);
+Node *primary(Token **rest, Token *tok);
+
+// expr = mul ("+" mul | "-" mul)*
+Node *expr(Token **rest, Token *tok) {
+  Node *node = mul(&tok, tok);
+
+  for (;;) {
+    if (equal(tok, "+")) {
+      Node *rhs = mul(&tok, tok->next);
+      node = new_binary(ND_ADD, node, rhs);
+      continue;
+    }
+    if (equal(tok, "-")) {
+      Node *rhs = mul(&tok, tok->next);
+      node = new_binary(ND_SUB, node, rhs);
+      continue;
+    }
+    *rest = tok;
+    return node;
+  }
+}
+
+// mul = primary ("*" primary | "/" primary)*
+Node *mul(Token **rest, Token *tok) {
+  Node *node = primary(&tok, tok);
+
+  for (;;) {
+    if (equal(tok, "*")) {
+      Node *rhs = primary(&tok, tok->next);
+      node = new_binary(ND_MUL, node, rhs);
+      continue;
+    }
+    if (equal(tok, "/")) {
+      Node *rhs = primary(&tok, tok->next);
+      node = new_binary(ND_DIV, node, rhs);
+      continue;
+    }
+    *rest = tok;
+    return node;
+  }
+}
+
+// primary = num | "(" expr ")"
+Node *primary(Token **rest, Token *tok) {
+  if (equal(tok, "(")) {
+    Node *node = expr(&tok, tok->next);
+    *rest = skip(tok, ")");
+    return node;
+  }
+  Node *node = new_num(get_number(tok));
+  *rest = tok->next;
+  return node;
+}
+
+////////////////////////////////////////////////////////////////
+// Code Generator
+static char *reg(int idx) {
+  static char *r[] = {"r10", "r11", "r12", "r13", "r14", "r15"};
+  if (idx < 0 || sizeof(r) / sizeof(*r) <= (unsigned)idx) {
+    error("register out of range: %d", idx);
+  }
+  return r[idx];
+}
+static int top;
+void gen_expr(Node *node) {
+  if (node->kind == ND_NUM) {
+    emit("mov %s, %d", reg(top++), node->val);
+    return;
+  }
+  gen_expr(node->lhs);
+  gen_expr(node->rhs);
+  char *rd = reg(top - 2);
+  char *rs = reg(top - 1);
+  top--;
+  switch (node->kind) {
+  case ND_ADD:
+    emit("add %s, %s", rd, rs);
+    return;
+    break;
+  case ND_SUB:
+    emit("sub %s, %s", rd, rs);
+    return;
+    break;
+  case ND_MUL:
+    emit("imul %s, %s", rd, rs);
+    return;
+    break;
+  case ND_DIV:
+    emit("mov rax, %s", rd);
+    emit("cqo");
+    emit("idiv %s", rs);
+    emit("mov %s, rax", rd);
+    return;
+    break;
+  default:
+    error("invalid expression");
+  }
+}
+
+////////////////////////////////////////////////////////////////
 int main(int argc, char **argv) {
   if (argc != 2) {
     error("引数の個数が正しくありません\n");
   }
   Token *tok = tokenize(argv[1]);
+  Node *node = expr(&tok, tok);
 
   emit_head();
   emit("main:");
+  emit("push r12");
+  emit("push r13");
+  emit("push r14");
+  emit("push r15");
 
-  // 最初のトークンは数字のはず
-  emit("mov rax, %ld", get_number(tok));
-  tok = tok->next;
+  gen_expr(node);
+  emit("mov rax, %s", reg(top - 1));
 
-  while (tok->kind != TK_EOF) {
-    if (equal(tok, "+")) {
-      emit("add rax, %ld", get_number(tok->next));
-      tok = tok->next->next;
-      continue;
-    }
-    if (equal(tok, "-")) {
-      emit("sub rax, %ld", get_number(tok->next));
-      tok = tok->next->next;
-      continue;
-    }
-    error_tok(tok, "unknown token");
-  }
+  emit("pop r15");
+  emit("pop r14");
+  emit("pop r13");
+  emit("pop r12");
   emit("ret");
   return 0;
 }
