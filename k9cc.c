@@ -229,17 +229,13 @@ Node *mul(Token **rest, Token *tok) {
 // unary   = ("+" | "-") ? primary
 Node *unary(Token **rest, Token *tok) {
   if (equal(tok, "-")) {
-    Node *lhs = new_num(0);
-    Node *rhs = primary(rest, tok->next);
-    return new_binary(ND_SUB, lhs, rhs);
+    return new_binary(ND_SUB, new_num(0), primary(rest, tok->next));
   }
   else if (equal(tok, "+")) {
-    Node *node = primary(rest, tok->next);
-    return node;
+    return primary(rest, tok->next);
   }
   else {
-    Node *node = primary(rest, tok);
-    return node;
+    return primary(rest, tok);
   }
 }
 
