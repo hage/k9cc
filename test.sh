@@ -15,6 +15,17 @@ assert() {
         exit 1
     fi
 }
+assert 0 '3>=4'
+assert 1 '3>=3'
+assert 1 '3>=2'
+assert 1 '3>2'
+assert 0 '-1<=-2'
+assert 1 '-1<=-1'
+assert 1 '-1<=5'
+assert 1 '-1<5'
+assert 0 '1!=1'
+assert 1 '-1==(-2+3)*(-1)'
+assert 1 '1==1'
 assert 4 2+2
 assert 5 '1-(-4)'
 assert 4 '-(- 4)'

@@ -117,12 +117,26 @@ Token *tokenize(char *p) {
     }
 
     // 記号
-    if (strchr("+-*/()", *p)) {
-      cur = new_token(TK_RESERVED, cur, p, 1, column);
-      p++;
-      continue;
+    static char *operators[] = {
+      "+", "-", "*", "/",
+      "(", ")",
+      "==", "!=",
+      "<=", ">=",
+      ">", "<",
+      NULL
+    };
+    char **op;
+    for (op = operators; *op; op++) {
+      size_t len = strlen(*op);
+      if (!strncmp(p, *op, len)) {
+        cur = new_token(TK_RESERVED, cur, p, len, column);
+        p += len;
+        break;
+      }
     }
-    error_at(p, "invalid token");
+    if (!*op) {
+      error_at(p, "invalid punctures");
+    }
   }
   new_token(TK_EOF, cur, p, 0, column);
   return head.next;
@@ -135,9 +149,14 @@ typedef enum {
   ND_SUB, // -
   ND_MUL, // *
   ND_DIV, // /
+  ND_EQ,  // ==
+  ND_NE,  // !=
+  ND_LT,  // <
+  ND_LE,  // <=
   ND_NUM, // numeric
 } NodeKind;
 
+// AST node type
 typedef struct Node Node;
 struct Node {
   NodeKind kind;
@@ -166,6 +185,9 @@ Node *new_num(long val) {
 }
 
 Node *expr(Token **rest, Token *tok);
+Node *equality(Token **rest, Token *tok);
+Node *relational(Token **rest, Token *tok);
+Node *add(Token **rest, Token *tok);
 Node *mul(Token **rest, Token *tok);
 Node *unary(Token **rest, Token *tok);
 Node *primary(Token **rest, Token *tok);
@@ -190,6 +212,18 @@ void walk_real(Node *node, int depth) {
   case ND_DIV:
     op = "/";
     break;
+  case ND_EQ:
+    op = "==";
+    break;
+  case ND_NE:
+    op = "!=";
+    break;
+  case ND_LT:
+    op = "<";
+    break;
+  case ND_LE:
+    op = "<=";
+    break;
   default:
     report("unknown kind\n");
     return;
@@ -200,8 +234,64 @@ void walk_real(Node *node, int depth) {
 }
 #define walk(node) walk_real(node, 0)
 
-// expr = mul ("+" mul | "-" mul)*
+// expr = equality
 Node *expr(Token **rest, Token *tok) {
+  return equality(rest, tok);
+}
+
+// equality = relational ("==" relational | "!=" relational)*
+Node *equality(Token **rest, Token *tok) {
+  Node *node = relational(&tok, tok);
+
+  for (;;) {
+    if (equal(tok, "==")) {
+      Node *rhs = relational(&tok, tok->next);
+      node = new_binary(ND_EQ, node, rhs);
+      continue;
+    }
+    if (equal(tok, "!=")) {
+      Node *rhs = relational(&tok, tok->next);
+      node = new_binary(ND_NE, node, rhs);
+      continue;
+    }
+
+    *rest = tok;
+    return node;
+  }
+}
+
+// relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+Node *relational(Token **rest, Token *tok) {
+  Node *node = add(&tok, tok);
+  for (;;) {
+    if (equal(tok, "<")) {
+      Node *rhs = add(&tok, tok->next);
+      node = new_binary(ND_LT, node, rhs);
+      continue;
+    }
+    if (equal(tok, "<=")) {
+      Node *rhs = add(&tok, tok->next);
+      node = new_binary(ND_LE, node, rhs);
+      continue;
+    }
+    if (equal(tok, ">")) {
+      Node *rhs = add(&tok, tok->next);
+      node = new_binary(ND_LT, rhs, node);
+      continue;
+    }
+    if (equal(tok, ">=")) {
+      Node *rhs = add(&tok, tok->next);
+      node = new_binary(ND_LE, rhs, node);
+      continue;
+    }
+
+    *rest = tok;
+    return node;
+  }
+}
+
+// add = mul ("+" mul | "-" mul)*
+Node *add(Token **rest, Token *tok) {
   Node *node = mul(&tok, tok);
 
   for (;;) {
@@ -220,7 +310,7 @@ Node *expr(Token **rest, Token *tok) {
   }
 }
 
-// mul     = unary ("*" unary | "/" unary)*
+// mul = unary ("*" unary | "/" unary)*
 Node *mul(Token **rest, Token *tok) {
   Node *node = unary(&tok, tok);
 
@@ -300,12 +390,34 @@ void gen_expr(Node *node) {
     emit("idiv %s", rs);
     emit("mov %s, rax", rd);
     return;
+  case ND_EQ:
+    emit("cmp %s, %s", rd, rs);
+    emit("sete al");
+    emit("movzb %s, al", rd);
+    return;
+  case ND_NE:
+    emit("cmp %s, %s", rd, rs);
+    emit("setne al");
+    emit("movzb %s, al", rd);
+    return;
+  case ND_LT:
+    emit("cmp %s, %s", rd, rs);
+    emit("setl al");
+    emit("movzb %s, al", rd);
+    return;
+  case ND_LE:
+    emit("cmp %s, %s", rd, rs);
+    emit("setle al");
+    emit("movzb %s, al", rd);
+    return;
   default:
+    walk(node);
     error("invalid expression");
   }
 }
 
 ////////////////////////////////////////////////////////////////
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     error("引数の個数が正しくありません\n");

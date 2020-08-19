@@ -1,5 +1,6 @@
 #ifndef K9CC_H
 #define K9CC_H
+#include <stdlib.h>
 
 ////////////////////////////////////////////////////////////////
 // Token
@@ -15,7 +16,7 @@ struct Token {
   Token *next;
   long val;                     // kindがTK_NUMだったときその値
   char *loc;                    // Token location
-  int len;                      // Token length
+  size_t len;                   // Token length
   int column;                   // ソース中の桁番号
 };
 
