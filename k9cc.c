@@ -52,6 +52,24 @@ Token *skip(Token *tok, const char *op) {
   return tok->next;
 }
 
+void dump_token_real(Token *tok, const char *file, int line) {
+  report("%s(%d): ", file, line);
+  switch (tok->kind) {
+  case TK_RESERVED:
+    report("[TK_RESERVED] %s\n", tok->loc);
+    break;
+  case TK_NUM:
+    report("[TK_NUM] %ld\n", tok->val);
+    break;
+  case TK_EOF:
+    report("[TK_EOF]\n");
+    break;
+  default:
+    report("unknown toknen kind\n");
+  }
+}
+#define dump_token(tok) dump_token_real(tok, __FILE__, __LINE__)
+
 // tokenを作成してcurにつなげる
 Token *new_token(TokenKind kind, Token *cur, char *str, int len, int column) {
   Token *tok = calloc(1, sizeof(Token));
@@ -137,6 +155,36 @@ Node *new_num(long val) {
 Node *expr(Token **rest, Token *tok);
 Node *mul(Token **rest, Token *tok);
 Node *primary(Token **rest, Token *tok);
+
+void walk_real(Node *node, int depth) {
+  report("%*s", depth, "");
+  if (node->kind == ND_NUM) {
+    report("num: %ld\n", node->val);
+    return;
+  }
+  char *op;
+  switch (node->kind) {
+  case ND_ADD:
+    op = "+";
+    break;
+  case ND_SUB:
+    op = "-";
+    break;
+  case ND_MUL:
+    op = "*";
+    break;
+  case ND_DIV:
+    op = "/";
+    break;
+  default:
+    report("unknown kind\n");
+    return;
+  }
+  report("OP[%s]:\n", op);
+  walk_real(node->lhs, depth + 2);
+  walk_real(node->rhs, depth + 2);
+}
+#define walk(node) walk_real(node, 0)
 
 // expr = mul ("+" mul | "-" mul)*
 Node *expr(Token **rest, Token *tok) {
@@ -242,6 +290,8 @@ int main(int argc, char **argv) {
   }
   Token *tok = tokenize(argv[1]);
   Node *node = expr(&tok, tok);
+
+  // walk(node);
 
   emit_head();
   emit("main:");

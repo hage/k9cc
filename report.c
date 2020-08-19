@@ -39,3 +39,10 @@ void error_at(char *pos, const char *fmt, ...) {
   exit(1);
 
 }
+
+void report(const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+}

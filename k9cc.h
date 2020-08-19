@@ -28,6 +28,7 @@ extern char *current_input;
 void error(const char *fmt, ...);
 void error_tok(Token *tok, const char *fmt, ...);
 void error_at(char *pos, const char *fmt, ...);
-
+void report(const char *fmt, ...);
+#define dbg(format, ...) do {report("%s:%d ", __FILE__, __LINE__); report(format, __VA_ARGS__)} while(0)
 
 #endif
