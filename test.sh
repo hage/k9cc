@@ -15,6 +15,10 @@ assert() {
         exit 1
     fi
 }
+assert 4 2+2
+assert 5 '1-(-4)'
+assert 4 '-(- 4)'
+assert 3 '+3'
 assert 42 '(18 + 3)*(2 + 2) / 2'
 assert 26 '2* 3+4 *5'
 assert 42 '  12 + 20 - 10 +20'

@@ -154,6 +154,7 @@ Node *new_num(long val) {
 
 Node *expr(Token **rest, Token *tok);
 Node *mul(Token **rest, Token *tok);
+Node *unary(Token **rest, Token *tok);
 Node *primary(Token **rest, Token *tok);
 
 void walk_real(Node *node, int depth) {
@@ -206,22 +207,38 @@ Node *expr(Token **rest, Token *tok) {
   }
 }
 
-// mul = primary ("*" primary | "/" primary)*
+// mul     = unary ("*" unary | "/" unary)*
 Node *mul(Token **rest, Token *tok) {
-  Node *node = primary(&tok, tok);
+  Node *node = unary(&tok, tok);
 
   for (;;) {
     if (equal(tok, "*")) {
-      Node *rhs = primary(&tok, tok->next);
+      Node *rhs = unary(&tok, tok->next);
       node = new_binary(ND_MUL, node, rhs);
       continue;
     }
     if (equal(tok, "/")) {
-      Node *rhs = primary(&tok, tok->next);
+      Node *rhs = unary(&tok, tok->next);
       node = new_binary(ND_DIV, node, rhs);
       continue;
     }
     *rest = tok;
+    return node;
+  }
+}
+// unary   = ("+" | "-") ? primary
+Node *unary(Token **rest, Token *tok) {
+  if (equal(tok, "-")) {
+    Node *lhs = new_num(0);
+    Node *rhs = primary(rest, tok->next);
+    return new_binary(ND_SUB, lhs, rhs);
+  }
+  else if (equal(tok, "+")) {
+    Node *node = primary(rest, tok->next);
+    return node;
+  }
+  else {
+    Node *node = primary(rest, tok);
     return node;
   }
 }
