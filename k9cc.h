@@ -21,6 +21,29 @@ struct Token {
 };
 
 ////////////////////////////////////////////////////////////////
+// parser
+typedef enum {
+  ND_ADD, // +
+  ND_SUB, // -
+  ND_MUL, // *
+  ND_DIV, // /
+  ND_EQ,  // ==
+  ND_NE,  // !=
+  ND_LT,  // <
+  ND_LE,  // <=
+  ND_NUM, // numeric
+} NodeKind;
+
+// AST node type
+typedef struct Node Node;
+struct Node {
+  NodeKind kind;
+  Node *lhs;                    // 左辺
+  Node *rhs;                    // 右辺
+  int val;                      // ND_NUMのときに使う
+};
+
+////////////////////////////////////////////////////////////////
 /// k9cc.c
 extern char *current_input;
 
