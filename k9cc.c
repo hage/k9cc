@@ -275,22 +275,18 @@ void gen_expr(Node *node) {
   case ND_ADD:
     emit("add %s, %s", rd, rs);
     return;
-    break;
   case ND_SUB:
     emit("sub %s, %s", rd, rs);
     return;
-    break;
   case ND_MUL:
     emit("imul %s, %s", rd, rs);
     return;
-    break;
   case ND_DIV:
     emit("mov rax, %s", rd);
     emit("cqo");
     emit("idiv %s", rs);
     emit("mov %s, rax", rd);
     return;
-    break;
   default:
     error("invalid expression");
   }
