@@ -37,12 +37,15 @@ void error_at(char *pos, const char *fmt, ...) {
   verror_at(fmt, pos - current_input, ap);
   va_end(ap);
   exit(1);
+}
 
+void va_report(const char *fmt, va_list ap) {
+  vfprintf(stderr, fmt, ap);
 }
 
 void report(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
-  vfprintf(stderr, fmt, ap);
+  va_report(fmt, ap);
   va_end(ap);
 }

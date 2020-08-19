@@ -28,7 +28,11 @@ extern char *current_input;
 void error(const char *fmt, ...);
 void error_tok(Token *tok, const char *fmt, ...);
 void error_at(char *pos, const char *fmt, ...);
+void va_report(const char*fmt, va_list ap);
 void report(const char *fmt, ...);
-#define dbg(format, ...) do {report("%s:%d ", __FILE__, __LINE__); report(format, __VA_ARGS__)} while(0)
-
+#define dbgf(fmt, ...)                                                   \
+  do {                                                                  \
+    report("%s(%d in %s) " fmt, __FILE__, __LINE__, __func__, ##__VA_ARGS__);    \
+  } while(0)
+#define dbg(s) report("%s(%d in %s) %s", __FILE__, __LINE__, __func__, s)
 #endif
