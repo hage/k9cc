@@ -7,6 +7,12 @@
 #include "k9cc.h"
 
 ////////////////////////////////////////////////////////////////
+// Utility
+char *strndup(const char *s, size_t n) {
+  return strncpy(calloc(n + 1, 1), s, n);
+}
+
+////////////////////////////////////////////////////////////////
 // emit code
 void emit(const char *fmt, ...) {
   FILE *fpout = stdout;
@@ -52,11 +58,13 @@ Token *skip(Token *tok, const char *op) {
   return tok->next;
 }
 
-void dump_token_real(Token *tok, const char *file, int line) {
-  report("%s(%d): ", file, line);
+void dump_token_one(Token *tok) {
+  char *s;
   switch (tok->kind) {
   case TK_RESERVED:
-    report("[TK_RESERVED] %s\n", tok->loc);
+    s = strndup(tok->loc, tok->len);
+    report("[TK_RESERVED] %s\n", s);
+    free(s);
     break;
   case TK_NUM:
     report("[TK_NUM] %ld\n", tok->val);
@@ -68,7 +76,12 @@ void dump_token_real(Token *tok, const char *file, int line) {
     report("unknown toknen kind\n");
   }
 }
-#define dump_token(tok) dump_token_real(tok, __FILE__, __LINE__)
+void dump_token(Token *tok) {
+  report("\n** Token\n");
+  for (; tok; tok = tok->next) {
+    dump_token_one(tok);
+  }
+}
 
 // tokenを作成してcurにつなげる
 Token *new_token(TokenKind kind, Token *cur, char *str, int len, int column) {
@@ -297,9 +310,10 @@ int main(int argc, char **argv) {
   if (argc != 2) {
     error("引数の個数が正しくありません\n");
   }
-  Token *tok = tokenize(argv[1]);
+  Token *tok = tokenize(argv[1]), *toktop = tok;
   Node *node = expr(&tok, tok);
 
+  // dump_token(toktop);
   // walk(node);
 
   emit_head();
