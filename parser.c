@@ -1,7 +1,10 @@
+////////////////////////////////////////////////////////////////
+// Parser
+
+#include <stdlib.h>
+#include <string.h>
 #include "k9cc.h"
 
-////////////////////////////////////////////////////////////////
-// parser
 static Node *new_node(NodeKind kind) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = kind;
