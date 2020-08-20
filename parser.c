@@ -71,12 +71,12 @@ static Node *unary(Token **rest, Token *tok);
 static Node *primary(Token **rest, Token *tok);
 
 // expr = equality
-Node *expr(Token **rest, Token *tok) {
+static Node *expr(Token **rest, Token *tok) {
   return equality(rest, tok);
 }
 
 // equality = relational ("==" relational | "!=" relational)*
-Node *equality(Token **rest, Token *tok) {
+static Node *equality(Token **rest, Token *tok) {
   Node *node = relational(&tok, tok);
 
   for (;;) {
@@ -97,7 +97,7 @@ Node *equality(Token **rest, Token *tok) {
 }
 
 // relational = add ("<" add | "<=" add | ">" add | ">=" add)*
-Node *relational(Token **rest, Token *tok) {
+static Node *relational(Token **rest, Token *tok) {
   Node *node = add(&tok, tok);
   for (;;) {
     if (equal(tok, "<")) {
@@ -127,7 +127,7 @@ Node *relational(Token **rest, Token *tok) {
 }
 
 // add = mul ("+" mul | "-" mul)*
-Node *add(Token **rest, Token *tok) {
+static Node *add(Token **rest, Token *tok) {
   Node *node = mul(&tok, tok);
 
   for (;;) {
@@ -147,7 +147,7 @@ Node *add(Token **rest, Token *tok) {
 }
 
 // mul = unary ("*" unary | "/" unary)*
-Node *mul(Token **rest, Token *tok) {
+static Node *mul(Token **rest, Token *tok) {
   Node *node = unary(&tok, tok);
 
   for (;;) {
@@ -166,7 +166,7 @@ Node *mul(Token **rest, Token *tok) {
   }
 }
 // unary   = ("+" | "-") ? primary
-Node *unary(Token **rest, Token *tok) {
+static Node *unary(Token **rest, Token *tok) {
   if (equal(tok, "-")) {
     return new_binary(ND_SUB, new_num(0), primary(rest, tok->next));
   }
@@ -179,7 +179,7 @@ Node *unary(Token **rest, Token *tok) {
 }
 
 // primary = num | "(" expr ")"
-Node *primary(Token **rest, Token *tok) {
+static Node *primary(Token **rest, Token *tok) {
   if (equal(tok, "(")) {
     Node *node = expr(&tok, tok->next);
     *rest = skip(tok, ")");
