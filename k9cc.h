@@ -1,9 +1,13 @@
 #ifndef K9CC_H
 #define K9CC_H
 #include <stdlib.h>
+#include <stdarg.h>
+#include <stdbool.h>
 
 ////////////////////////////////////////////////////////////////
-// Token
+// lexer.c
+extern char *current_input;
+
 typedef enum {
   TK_RESERVED,                  // Keywords or punctuators
   TK_NUM,                       // Numeric literals
@@ -20,8 +24,15 @@ struct Token {
   int column;                   // ソース中の桁番号
 };
 
+long get_number(Token *tok);
+bool equal(Token *tok, const char *op);
+Token *skip(Token *tok, const char *op);
+void dump_token_one(Token *tok);
+void dump_token(Token *tok);
+Token *tokenize(char *p);
+
 ////////////////////////////////////////////////////////////////
-// parser
+// parser.c
 typedef enum {
   ND_ADD, // +
   ND_SUB, // -
@@ -43,9 +54,13 @@ struct Node {
   int val;                      // ND_NUMのときに使う
 };
 
+void walk_real(Node *node, int depth);
+Node *parse(Token *tok);
+
+#define walk(node) walk_real(node, 0)
+
 ////////////////////////////////////////////////////////////////
 /// k9cc.c
-extern char *current_input;
 
 ////////////////////////////////////////////////////////////////
 // report.c
@@ -60,3 +75,11 @@ void report(const char *fmt, ...);
   } while(0)
 #define dbg(s) report("%s(%d in %s) %s", __FILE__, __LINE__, __func__, s)
 #endif
+
+////////////////////////////////////////////////////////////////
+// utility.c
+char *strndup(const char *s, size_t n);
+
+// Local Variables:
+// compile-command: "./dr make test"
+// End:
