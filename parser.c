@@ -24,7 +24,7 @@ static Node *new_num(long val) {
   return node;
 }
 
-void walk_real(Node *node, int depth) {
+static void walk_one(Node *node, int depth) {
   report("%*s", depth, "");
   if (node->kind == ND_NUM) {
     report("num: %ld\n", node->val);
@@ -56,6 +56,9 @@ void walk_real(Node *node, int depth) {
   case ND_LE:
     op = "<=";
     break;
+  case ND_EXPR_STMT:
+    op = "expr";
+    break;
   default:
     report("unknown kind\n");
     return;
@@ -64,7 +67,16 @@ void walk_real(Node *node, int depth) {
   walk_real(node->lhs, depth + 2);
   walk_real(node->rhs, depth + 2);
 }
+void walk_real(Node *node, int depth) {
+  for (Node *cur = node; cur; cur = cur->next) {
+    walk_one(cur, depth);
+    report("---\n");
+  }
+}
 
+static Node *program(Token **rest, Token *tok);
+static Node *stmt(Token **rest, Token *tok);
+static Node *expr_stmt(Token **rest, Token *tok);
 static Node *expr(Token **rest, Token *tok);
 static Node *equality(Token **rest, Token *tok);
 static Node *relational(Token **rest, Token *tok);
@@ -72,6 +84,32 @@ static Node *add(Token **rest, Token *tok);
 static Node *mul(Token **rest, Token *tok);
 static Node *unary(Token **rest, Token *tok);
 static Node *primary(Token **rest, Token *tok);
+
+
+// program = stmt*
+static Node *program(Token **rest, Token *tok) {
+  Node head = {}, *cur = &head, *next;
+  while (tok->kind != TK_EOF) {
+    next = stmt(rest, tok);
+    cur->next = next;
+    cur = next;
+    tok = *rest;
+  }
+  return head.next;
+}
+
+// stmt = expr-stmt
+static Node *stmt(Token **rest, Token *tok) {
+  return expr_stmt(rest, tok);
+}
+
+// expr-stmt = expr ";"
+static Node *expr_stmt(Token **rest, Token *tok) {
+  Node *node = new_node(ND_EXPR_STMT);
+  node->lhs = expr(&tok, tok);
+  *rest = skip(tok, ";");
+  return node;
+}
 
 // expr = equality
 static Node *expr(Token **rest, Token *tok) {
@@ -195,5 +233,5 @@ static Node *primary(Token **rest, Token *tok) {
 
 // parser entry
 Node *parse(Token *tok) {
-  return expr(&tok, tok);
+  return program(&tok, tok);
 }

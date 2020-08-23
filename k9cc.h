@@ -33,22 +33,26 @@ Token *tokenize(char *p);
 
 ////////////////////////////////////////////////////////////////
 // parser.c
+
+// Kind of node
 typedef enum {
-  ND_ADD, // +
-  ND_SUB, // -
-  ND_MUL, // *
-  ND_DIV, // /
-  ND_EQ,  // ==
-  ND_NE,  // !=
-  ND_LT,  // <
-  ND_LE,  // <=
-  ND_NUM, // numeric
+  ND_ADD,                       // +
+  ND_SUB,                       // -
+  ND_MUL,                       // *
+  ND_DIV,                       // /
+  ND_EQ,                        // ==
+  ND_NE,                        // !=
+  ND_LT,                        // <
+  ND_LE,                        // <=
+  ND_EXPR_STMT,                 // Expression statement
+  ND_NUM,                       // numeric
 } NodeKind;
 
 // AST node type
 typedef struct Node Node;
 struct Node {
   NodeKind kind;
+  Node *next;                   // Next node
   Node *lhs;                    // 左辺
   Node *rhs;                    // 右辺
   int val;                      // ND_NUMのときに使う

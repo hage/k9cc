@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include "k9cc.h"
 
 static void emit(const char *fmt, ...) {
@@ -85,6 +86,17 @@ static void gen_expr(Node *node) {
   }
 }
 
+static void gen_stmt(Node *node) {
+  switch (node->kind) {
+  case ND_EXPR_STMT:
+    gen_expr(node->lhs);
+    emit("mov rax, %s", reg(--top));
+    break;
+  default:
+    error("invalid statement");
+  }
+}
+
 void codegen(Node *node) {
   emit_head();
   emit("main:");
@@ -93,9 +105,10 @@ void codegen(Node *node) {
   emit("push r14");
   emit("push r15");
 
-  gen_expr(node);
-
-  emit("mov rax, %s", reg(top - 1));
+  for (Node *cur = node; cur; cur = cur->next) {
+    gen_stmt(cur);
+    assert(top == 0);
+  }
 
   emit("pop r15");
   emit("pop r14");
