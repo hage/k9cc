@@ -65,30 +65,30 @@ static Token *new_token(TokenKind kind, Token *cur, char *str, int len, int colu
   return tok;
 }
 // Tokenize p and returns new tokens.
-Token *tokenize(char *p) {
+Token *tokenize(char *src) {
   Token head = {};
   Token *cur = &head;
   int column = 0;
 
-  current_input = p;
-  while (*p) {
-    if (isspace(*p)) {
-      p++;
+  current_input = src;
+  while (*src) {
+    if (isspace(*src)) {
+      src++;
       continue;
     }
 
-    column = p - current_input;
+    column = src - current_input;
     // 数字
-    if (isdigit(*p)) {
-      cur = new_token(TK_NUM, cur, p, 0, column);
-      char *q = p;
-      cur->val = strtol(p, &p, 10);
-      cur->len = p - q;
+    if (isdigit(*src)) {
+      cur = new_token(TK_NUM, cur, src, 0, column);
+      char *p = src;
+      cur->val = strtol(src, &src, 10);
+      cur->len = src - p;
       continue;
     }
 
     // 記号
-    static char *operators[] = {
+    static char *punctures[] = {
       "+", "-", "*", "/",
       "(", ")",
       "==", "!=",
@@ -96,20 +96,20 @@ Token *tokenize(char *p) {
       ">", "<",
       NULL
     };
-    char **op;
-    for (op = operators; *op; op++) {
-      size_t len = strlen(*op);
-      if (!strncmp(p, *op, len)) {
-        cur = new_token(TK_RESERVED, cur, p, len, column);
-        p += len;
+    char **punc;
+    for (punc = punctures; *punc; punc++) {
+      size_t len = strlen(*punc);
+      if (!strncmp(src, *punc, len)) {
+        cur = new_token(TK_RESERVED, cur, src, len, column);
+        src += len;
         break;
       }
     }
-    if (!*op) {
-      error_at(p, "invalid punctures");
+    if (!*punc) {
+      error_at(src, "invalid punctures");
     }
   }
-  new_token(TK_EOF, cur, p, 0, column);
+  new_token(TK_EOF, cur, src, 0, column);
   return head.next;
 }
 
