@@ -87,13 +87,10 @@ Token *tokenize(char *src) {
       continue;
     }
 
-    // 記号
+    // Multi-letter punctuators
     static char *punctuators[] = {
-      "+", "-", "*", "/",
-      "(", ")",
       "==", "!=",
       "<=", ">=",
-      ">", "<",
       NULL
     };
     char **punc;
@@ -105,9 +102,18 @@ Token *tokenize(char *src) {
         break;
       }
     }
-    if (!*punc) {
-      error_at(src, "invalid punctuators");
+    if (*punc) {
+      continue;
     }
+
+    // Single-letter punctuators
+    if (ispunct(*src)) {
+      cur = new_token(TK_RESERVED, cur, src++, 1, column);
+      continue;
+    }
+
+    error_at(src, "invalid token");
+
   }
   new_token(TK_EOF, cur, src, 0, column);
   return head.next;

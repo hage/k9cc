@@ -22,7 +22,8 @@ assert () {
         exit 1
     fi
 }
-
+# assert 13 'a = 2;
+# b = 5 * 6 - 8; a+b / 2'
 assert 0 '3>=4' &
 assert 1 '3>=3' &
 assert 1 '3>=2' &
