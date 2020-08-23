@@ -88,7 +88,7 @@ Token *tokenize(char *src) {
     }
 
     // 記号
-    static char *punctures[] = {
+    static char *punctuators[] = {
       "+", "-", "*", "/",
       "(", ")",
       "==", "!=",
@@ -97,7 +97,7 @@ Token *tokenize(char *src) {
       NULL
     };
     char **punc;
-    for (punc = punctures; *punc; punc++) {
+    for (punc = punctuators; *punc; punc++) {
       size_t len = strlen(*punc);
       if (!strncmp(src, *punc, len)) {
         cur = new_token(TK_RESERVED, cur, src, len, column);
@@ -106,7 +106,7 @@ Token *tokenize(char *src) {
       }
     }
     if (!*punc) {
-      error_at(src, "invalid punctures");
+      error_at(src, "invalid punctuators");
     }
   }
   new_token(TK_EOF, cur, src, 0, column);
