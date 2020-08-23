@@ -103,8 +103,3 @@ void codegen(Node *node) {
   emit("pop r12");
   emit("ret");
 }
-
-
-// Local Variables:
-// compile-command: "./dr make test"
-// End:

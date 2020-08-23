@@ -197,7 +197,3 @@ static Node *primary(Token **rest, Token *tok) {
 Node *parse(Token *tok) {
   return expr(&tok, tok);
 }
-
-// Local Variables:
-// compile-command: "./dr make test"
-// End:

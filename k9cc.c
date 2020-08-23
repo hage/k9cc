@@ -16,7 +16,3 @@ int main(int argc, char **argv) {
   codegen(node);
   return 0;
 }
-
-// Local Variables:
-// compile-command: "./dr make test"
-// End:

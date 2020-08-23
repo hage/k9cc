@@ -80,7 +80,3 @@ void report(const char *fmt, ...);
 ////////////////////////////////////////////////////////////////
 // utility.c
 char *strndup(const char *s, size_t n);
-
-// Local Variables:
-// compile-command: "./dr make test"
-// End:

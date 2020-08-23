@@ -112,7 +112,3 @@ Token *tokenize(char *src) {
   new_token(TK_EOF, cur, src, 0, column);
   return head.next;
 }
-
-// Local Variables:
-// compile-command: "./dr make test"
-// End:
