@@ -12,4 +12,4 @@ test: k9cc
 	./test.sh
 
 clean:
-	rm -f k9cc *.s tmp* *.o
+	rm -f k9cc *.s tmp* *.o a.out

@@ -19,7 +19,7 @@ struct Token {
   TokenKind kind;
   Token *next;
   long val;                     // kindがTK_NUMだったときその値
-  char *loc;                    // Token location
+  const char *loc;              // Token location
   size_t len;                   // Token length
   int column;                   // ソース中の桁番号
 };
@@ -44,6 +44,7 @@ typedef enum {
   ND_NE,                        // !=
   ND_LT,                        // <
   ND_LE,                        // <=
+  ND_RETURN,                    // "return"
   ND_EXPR_STMT,                 // Expression statement
   ND_NUM,                       // numeric
 } NodeKind;

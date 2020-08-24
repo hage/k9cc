@@ -1,5 +1,6 @@
 program         = stmt*
-stmt            = expr-stmt
+stmt            = "return" expr ";"
+                | expr-stmt
 expr-stmt       = expr ";"
 expr            = equality
 equality        = relational ("==" relational | "!=" relational)*

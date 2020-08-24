@@ -56,6 +56,9 @@ static void walk_one(Node *node, int depth) {
   case ND_LE:
     op = "<=";
     break;
+  case ND_RETURN:
+    op = "return";
+    break;
   case ND_EXPR_STMT:
     op = "expr";
     break;
@@ -98,8 +101,15 @@ static Node *program(Token **rest, Token *tok) {
   return head.next;
 }
 
-// stmt = expr-stmt
+// stmt = "return" expr ";"
+//      | expr-stmt
 static Node *stmt(Token **rest, Token *tok) {
+  if (equal(tok, "return")) {
+    Node *node = new_node(ND_RETURN);
+    node->lhs = expr(&tok, tok->next);
+    *rest = skip(tok, ";");
+    return node;
+  }
   return expr_stmt(rest, tok);
 }
 
