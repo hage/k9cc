@@ -8,6 +8,23 @@
 
 char *current_input;
 
+// 名前に使える1文字目
+static int is_nameletter1(char c) {
+  return isalpha(c) || c == '_';
+}
+
+// 名前に使える2文字目以降
+static int is_nameletter2(char c) {
+  return is_nameletter1(c) || isdigit(c);
+}
+
+// sがkeyで始まっているときkeyの長さを返す。
+// 始まっていないときは0を返す。
+static size_t startswith(const char *s, const char *key) {
+  size_t len = strlen(key);
+  return strncmp(s, key, len) == 0 ? len : 0;
+}
+
 long get_number(Token *tok) {
   if (!tok || tok->kind != TK_NUM) {
     error_tok(tok, "数字が必要です");
@@ -55,7 +72,7 @@ void dump_token(Token *tok) {
 }
 
 // tokenを作成してcurにつなげる
-static Token *new_token(TokenKind kind, Token *cur, char *str, int len, int column) {
+static Token *new_token(TokenKind kind, Token *cur, const char *str, int len, int column) {
   Token *tok = calloc(1, sizeof(Token));
   tok->kind = kind;
   tok->loc = str;
@@ -64,6 +81,18 @@ static Token *new_token(TokenKind kind, Token *cur, char *str, int len, int colu
   cur->next = tok;
   return tok;
 }
+
+// srcからkeywordが見つかったらトークンのチェーンにつなげてtrueを返す
+static size_t keyword(Token **pcur, char **psrc, const char *keyword, int column) {
+  size_t len = startswith(*psrc, keyword);
+  if (len && !is_nameletter2(*psrc[len])) {
+    *pcur = new_token(TK_RESERVED, *pcur, *psrc, len, column);
+    *psrc += len;
+    return true;
+  }
+  return false;
+}
+
 // Tokenize p and returns new tokens.
 Token *tokenize(char *src) {
   Token head = {};
@@ -109,6 +138,10 @@ Token *tokenize(char *src) {
     // Single-letter punctuators
     if (ispunct(*src)) {
       cur = new_token(TK_RESERVED, cur, src++, 1, column);
+      continue;
+    }
+
+    if (keyword(&cur, &src, "return", column)) {
       continue;
     }
 
