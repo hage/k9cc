@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include "k9cc.h"
 
+// report an error and abnormal exit
 void error(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
