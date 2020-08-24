@@ -88,9 +88,14 @@ static void gen_expr(Node *node) {
 
 static void gen_stmt(Node *node) {
   switch (node->kind) {
-  case ND_EXPR_STMT:
+  case ND_RETURN:
     gen_expr(node->lhs);
     emit("mov rax, %s", reg(--top));
+    emit("jmp .L.return");
+    break;
+  case ND_EXPR_STMT:
+    gen_expr(node->lhs);
+    top--;
     break;
   default:
     error("invalid statement");
@@ -110,6 +115,7 @@ void codegen(Node *node) {
     assert(top == 0);
   }
 
+  emit(".L.return:");
   emit("pop r15");
   emit("pop r14");
   emit("pop r13");

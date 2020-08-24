@@ -85,7 +85,7 @@ static Token *new_token(TokenKind kind, Token *cur, const char *str, int len, in
 // srcからkeywordが見つかったらトークンのチェーンにつなげてtrueを返す
 static size_t keyword(Token **pcur, char **psrc, const char *keyword, int column) {
   size_t len = startswith(*psrc, keyword);
-  if (len && !is_nameletter2(*psrc[len])) {
+  if (len && !is_nameletter2((*psrc)[len])) {
     *pcur = new_token(TK_RESERVED, *pcur, *psrc, len, column);
     *psrc += len;
     return true;
