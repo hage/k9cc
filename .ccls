@@ -1,0 +1,4 @@
+clang
+%c -std=c11
+%c -I/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk/usr/include/
+%c -I/Library/Developer/CommandLineTools/usr/lib/clang/10.0.1/include
