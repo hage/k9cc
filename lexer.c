@@ -27,7 +27,7 @@ static size_t startswith(const char *s, const char *key) {
 
 long get_number(Token *tok) {
   if (!tok || tok->kind != TK_NUM) {
-    error_tok(tok, "数字が必要です");
+    error_tok(tok, "lexser/数字が必要です");
   }
   return tok->val;
 }
@@ -41,7 +41,7 @@ bool equal(Token *tok, const char *op) {
 
 Token *skip(Token *tok, const char *op) {
   if (!equal(tok, op)) {
-    error_tok(tok, "expected '%s'", op);
+    error_tok(tok, "lexser/expected '%s'", op);
   }
   return tok->next;
 }
@@ -52,6 +52,11 @@ void dump_token_one(Token *tok) {
   case TK_RESERVED:
     s = strndup(tok->loc, tok->len);
     report("[TK_RESERVED] %s\n", s);
+    free(s);
+    break;
+  case TK_IDENT:
+    s = strndup(tok->loc, tok->len);
+    report("[TK_IDENT] %s\n", s);
     free(s);
     break;
   case TK_NUM:
@@ -88,9 +93,9 @@ static size_t keyword(Token **pcur, char **psrc, const char *keyword, int column
   if (len && !is_nameletter2((*psrc)[len])) {
     *pcur = new_token(TK_RESERVED, *pcur, *psrc, len, column);
     *psrc += len;
-    return true;
+    return len;
   }
-  return false;
+  return 0;
 }
 
 // Tokenize p and returns new tokens.
@@ -145,7 +150,13 @@ Token *tokenize(char *src) {
       continue;
     }
 
-    error_at(src, "invalid token");
+    // Identifire
+    if (isalpha(*src)) {
+      cur = new_token(TK_IDENT, cur, src++, 1, column);
+      continue;
+    }
+
+    error_at(src, "lexser/invalid token");
 
   }
   new_token(TK_EOF, cur, src, 0, column);
