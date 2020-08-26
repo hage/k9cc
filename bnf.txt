@@ -2,10 +2,11 @@ program         = stmt*
 stmt            = "return" expr ";"
                 | expr-stmt
 expr-stmt       = expr ";"
-expr            = equality
+expr            = assign
+assign          = equality ("=" assign)?
 equality        = relational ("==" relational | "!=" relational)*
 relational      = add ("<" add | "<=" add | ">" add | ">=" add)*
 add             = mul ("+" mul | "-" mul)*
 mul             = unary ("*" unary | "/" unary)*
 unary           = ("+" | "-") ? primary
-primary         = num | "(" expr ")"
+primary         = ident | num | "(" expr ")"

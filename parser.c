@@ -30,6 +30,10 @@ static void walk_one(Node *node, int depth) {
     report("num: %ld\n", node->val);
     return;
   }
+  else if (node->kind == ND_VAR) {
+    report("var: %c\n", node->name);
+    return;
+  }
   char *op;
   switch (node->kind) {
   case ND_ADD:
@@ -56,6 +60,9 @@ static void walk_one(Node *node, int depth) {
   case ND_LE:
     op = "<=";
     break;
+  case ND_ASSIGN:
+    op = "=";
+    break;
   case ND_RETURN:
     op = "return";
     break;
@@ -66,14 +73,15 @@ static void walk_one(Node *node, int depth) {
     report("unknown kind\n");
     return;
   }
-  report("OP[%s]:\n", op);
+  if (op) {
+    report("OP[%s]:\n", op);
+  }
   walk_real(node->lhs, depth + 2);
   walk_real(node->rhs, depth + 2);
 }
 void walk_real(Node *node, int depth) {
   for (Node *cur = node; cur; cur = cur->next) {
     walk_one(cur, depth);
-    report("---\n");
   }
 }
 
@@ -81,6 +89,7 @@ static Node *program(Token **rest, Token *tok);
 static Node *stmt(Token **rest, Token *tok);
 static Node *expr_stmt(Token **rest, Token *tok);
 static Node *expr(Token **rest, Token *tok);
+static Node *assign(Token **rest, Token *tok);
 static Node *equality(Token **rest, Token *tok);
 static Node *relational(Token **rest, Token *tok);
 static Node *add(Token **rest, Token *tok);
@@ -121,9 +130,21 @@ static Node *expr_stmt(Token **rest, Token *tok) {
   return node;
 }
 
-// expr = equality
+// expr = assign
 static Node *expr(Token **rest, Token *tok) {
-  return equality(rest, tok);
+  return assign(rest, tok);
+}
+
+// assign = equality ("=" assign)?
+static Node *assign(Token **rest, Token *tok) {
+  Node *lhs = equality(rest, tok);
+  if (equal(*rest, "=")) {
+    tok = *rest;
+    return new_binary(ND_ASSIGN, lhs, assign(rest, tok->next));
+  }
+  else {
+    return lhs;
+  }
 }
 
 // equality = relational ("==" relational | "!=" relational)*
@@ -229,11 +250,17 @@ static Node *unary(Token **rest, Token *tok) {
   }
 }
 
-// primary = num | "(" expr ")"
+// primary = ident | num | "(" expr ")"
 static Node *primary(Token **rest, Token *tok) {
   if (equal(tok, "(")) {
     Node *node = expr(&tok, tok->next);
     *rest = skip(tok, ")");
+    return node;
+  }
+  else if (tok->kind == TK_IDENT) {
+    Node *node = new_node(ND_VAR);
+    node->name = *tok->loc;
+    *rest = tok->next;
     return node;
   }
   Node *node = new_num(get_number(tok));

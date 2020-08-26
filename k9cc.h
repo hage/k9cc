@@ -10,6 +10,7 @@ extern char *current_input;
 
 typedef enum {
   TK_RESERVED,                  // Keywords or punctuators
+  TK_IDENT,                     // Identifires
   TK_NUM,                       // Numeric literals
   TK_EOF,                       // End-of-file markers
 } TokenKind;
@@ -44,8 +45,10 @@ typedef enum {
   ND_NE,                        // !=
   ND_LT,                        // <
   ND_LE,                        // <=
+  ND_ASSIGN,                    // =
   ND_RETURN,                    // "return"
   ND_EXPR_STMT,                 // Expression statement
+  ND_VAR,                       // Variable
   ND_NUM,                       // numeric
 } NodeKind;
 
@@ -56,6 +59,7 @@ struct Node {
   Node *next;                   // Next node
   Node *lhs;                    // 左辺
   Node *rhs;                    // 右辺
+  char name;                    // ND_VARのときに使う
   int val;                      // ND_NUMのときに使う
 };
 
