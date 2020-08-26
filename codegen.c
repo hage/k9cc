@@ -25,11 +25,47 @@ static void emit_head(void) {
   emit(".globl main");
 }
 
+
+static void load() {
+  emit("pop rax");
+  emit("mov rax, [rax]");
+  emit("push rax");
+}
+
+static void store() {
+  emit("pop rdi");
+  emit("pop rax");
+  emit("mov [rax], rdi");
+  emit("push rdi");
+}
+
+static void gen_addr(Node *node) {
+  if (node->kind == ND_VAR) {
+    int offset = (node->name - 'a' + 1) * 8;
+    emit("lea rax, [rbp-%d]", offset);
+    emit("push rax");
+  }
+  else {
+    error("lvalueではありません");
+  }
+}
+
 static void gen_expr(Node *node) {
-  if (node->kind == ND_NUM) {
+  switch (node->kind) {
+  case ND_ASSIGN:
+    gen_addr(node->lhs);
+    gen_expr(node->rhs);
+    store();
+    return;
+  case ND_VAR:
+    gen_addr(node);
+    load();
+    return;
+  case ND_NUM:
     emit("push %ld", node->val);
     return;
   }
+
   gen_expr(node->lhs);
   gen_expr(node->rhs);
 
@@ -96,9 +132,16 @@ static void gen_stmt(Node *node) {
 void codegen(Node *node) {
   emit_head();
   emit("main:");
+
+  // prologue
+  emit("push rbp");
+  emit("mov rbp, rsp");
+  emit("sub rsp, 208");
   for (Node *cur = node; cur; cur = cur->next) {
     gen_stmt(cur);
   }
   emit(".L.return:");
+  emit("mov rsp, rbp");
+  emit("pop rbp");
   emit("ret");
 }

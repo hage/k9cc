@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
   Token *tok = tokenize(argv[1]), *toktop = tok;
   Node *node = parse(tok);
 
-  dump_token(toktop); walk(node);
+  // dump_token(toktop); walk(node);
 
   codegen(node);
   return 0;
