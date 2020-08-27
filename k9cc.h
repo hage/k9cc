@@ -63,6 +63,10 @@ struct Node {
   int val;                      // ND_NUMのときに使う
 };
 
+typedef struct ParseInfo {
+  Token *tok;
+}ParseInfo;
+
 void walk_real(Node *node, int depth);
 Node *parse(Token *tok);
 

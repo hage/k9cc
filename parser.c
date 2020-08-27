@@ -85,62 +85,66 @@ void walk_real(Node *node, int depth) {
   }
 }
 
-static Node *program(Token **rest, Token *tok);
-static Node *stmt(Token **rest, Token *tok);
-static Node *expr_stmt(Token **rest, Token *tok);
-static Node *expr(Token **rest, Token *tok);
-static Node *assign(Token **rest, Token *tok);
-static Node *equality(Token **rest, Token *tok);
-static Node *relational(Token **rest, Token *tok);
-static Node *add(Token **rest, Token *tok);
-static Node *mul(Token **rest, Token *tok);
-static Node *unary(Token **rest, Token *tok);
-static Node *primary(Token **rest, Token *tok);
+static Node *program(ParseInfo *info);
+static Node *stmt(ParseInfo *info);
+static Node *expr_stmt(ParseInfo *info);
+static Node *expr(ParseInfo *info);
+static Node *assign(ParseInfo *info);
+static Node *equality(ParseInfo *info);
+static Node *relational(ParseInfo *info);
+static Node *add(ParseInfo *info);
+static Node *mul(ParseInfo *info);
+static Node *unary(ParseInfo *info);
+static Node *primary(ParseInfo *info);
 
+static ParseInfo *advance_tok(ParseInfo *info) {
+  info->tok = info->tok->next;
+  return info;
+}
 
 // program = stmt*
-static Node *program(Token **rest, Token *tok) {
+static Node *program(ParseInfo *info) {
   Node head = {}, *cur = &head, *next;
-  while (tok->kind != TK_EOF) {
-    next = stmt(rest, tok);
+  while (info->tok->kind != TK_EOF) {
+    next = stmt(info);
     cur->next = next;
     cur = next;
-    tok = *rest;
   }
   return head.next;
 }
 
 // stmt = "return" expr ";"
 //      | expr-stmt
-static Node *stmt(Token **rest, Token *tok) {
-  if (equal(tok, "return")) {
+static Node *stmt(ParseInfo *info) {
+  if (equal(info->tok, "return")) {
     Node *node = new_node(ND_RETURN);
-    node->lhs = expr(&tok, tok->next);
-    *rest = skip(tok, ";");
+    node->lhs = expr(advance_tok(info));
+    info->tok = skip(info->tok, ";");
     return node;
   }
-  return expr_stmt(rest, tok);
+  return expr_stmt(info);
 }
 
 // expr-stmt = expr ";"
-static Node *expr_stmt(Token **rest, Token *tok) {
+static Node *expr_stmt(ParseInfo *info) {
   Node *node = new_node(ND_EXPR_STMT);
-  node->lhs = expr(&tok, tok);
-  *rest = skip(tok, ";");
+  node->lhs = expr(info);
+  info->tok = skip(info->tok, ";");
   return node;
 }
 
 // expr = assign
-static Node *expr(Token **rest, Token *tok) {
-  return assign(rest, tok);
+static Node *expr(ParseInfo *info) {
+  return assign(info);
 }
 
 // assign = equality ("=" assign)?
-static Node *assign(Token **rest, Token *tok) {
-  Node *lhs = equality(rest, tok);
-  if (equal(*rest, "=")) {
-    tok = *rest;
-    return new_binary(ND_ASSIGN, lhs, assign(rest, tok->next));
+static Node *assign(ParseInfo *info) {
+  Node *lhs = equality(info);
+  if (equal(info->tok, "=")) {
+    Node *rhs = assign(advance_tok(info));
+    Node *node = new_binary(ND_ASSIGN, lhs, rhs);
+    return node;
   }
   else {
     return lhs;
@@ -148,127 +152,123 @@ static Node *assign(Token **rest, Token *tok) {
 }
 
 // equality = relational ("==" relational | "!=" relational)*
-static Node *equality(Token **rest, Token *tok) {
-  Node *node = relational(&tok, tok);
+static Node *equality(ParseInfo *info) {
+  Node *node = relational(info);
 
   for (;;) {
-    if (equal(tok, "==")) {
-      Node *rhs = relational(&tok, tok->next);
+    if (equal(info->tok, "==")) {
+      Node *rhs = relational(advance_tok(info));
       node = new_binary(ND_EQ, node, rhs);
       continue;
     }
-    if (equal(tok, "!=")) {
-      Node *rhs = relational(&tok, tok->next);
+    if (equal(info->tok, "!=")) {
+      Node *rhs = relational(advance_tok(info));
       node = new_binary(ND_NE, node, rhs);
       continue;
     }
-
-    *rest = tok;
     return node;
   }
 }
 
 // relational = add ("<" add | "<=" add | ">" add | ">=" add)*
-static Node *relational(Token **rest, Token *tok) {
-  Node *node = add(&tok, tok);
+static Node *relational(ParseInfo *info) {
+  Node *node = add(info);
   for (;;) {
-    if (equal(tok, "<")) {
-      Node *rhs = add(&tok, tok->next);
+    if (equal(info->tok, "<")) {
+      Node *rhs = add(advance_tok(info));
       node = new_binary(ND_LT, node, rhs);
       continue;
     }
-    if (equal(tok, "<=")) {
-      Node *rhs = add(&tok, tok->next);
+    if (equal(info->tok, "<=")) {
+      Node *rhs = add(advance_tok(info));
       node = new_binary(ND_LE, node, rhs);
       continue;
     }
-    if (equal(tok, ">")) {
-      Node *rhs = add(&tok, tok->next);
+    if (equal(info->tok, ">")) {
+      Node *rhs = add(advance_tok(info));
       node = new_binary(ND_LT, rhs, node);
       continue;
     }
-    if (equal(tok, ">=")) {
-      Node *rhs = add(&tok, tok->next);
+    if (equal(info->tok, ">=")) {
+      Node *rhs = add(advance_tok(info));
       node = new_binary(ND_LE, rhs, node);
       continue;
     }
-
-    *rest = tok;
     return node;
   }
 }
 
 // add = mul ("+" mul | "-" mul)*
-static Node *add(Token **rest, Token *tok) {
-  Node *node = mul(&tok, tok);
+static Node *add(ParseInfo *info) {
+  Node *node = mul(info);
 
   for (;;) {
-    if (equal(tok, "+")) {
-      Node *rhs = mul(&tok, tok->next);
+    if (equal(info->tok, "+")) {
+      Node *rhs = mul(advance_tok(info));
       node = new_binary(ND_ADD, node, rhs);
       continue;
     }
-    if (equal(tok, "-")) {
-      Node *rhs = mul(&tok, tok->next);
+    if (equal(info->tok, "-")) {
+      Node *rhs = mul(advance_tok(info));
       node = new_binary(ND_SUB, node, rhs);
       continue;
     }
-    *rest = tok;
     return node;
   }
 }
 
 // mul = unary ("*" unary | "/" unary)*
-static Node *mul(Token **rest, Token *tok) {
-  Node *node = unary(&tok, tok);
+static Node *mul(ParseInfo *info) {
+  Node *node = unary(info);
 
   for (;;) {
-    if (equal(tok, "*")) {
-      Node *rhs = unary(&tok, tok->next);
+    if (equal(info->tok, "*")) {
+      Node *rhs = unary(advance_tok(info));
       node = new_binary(ND_MUL, node, rhs);
       continue;
     }
-    if (equal(tok, "/")) {
-      Node *rhs = unary(&tok, tok->next);
+    if (equal(info->tok, "/")) {
+      Node *rhs = unary(advance_tok(info));
       node = new_binary(ND_DIV, node, rhs);
       continue;
     }
-    *rest = tok;
     return node;
   }
 }
 // unary   = ("+" | "-") ? primary
-static Node *unary(Token **rest, Token *tok) {
-  if (equal(tok, "-")) {
-    return new_binary(ND_SUB, new_num(0), primary(rest, tok->next));
+static Node *unary(ParseInfo *info) {
+  if (equal(info->tok, "-")) {
+    return new_binary(ND_SUB, new_num(0), primary(advance_tok(info)));
   }
-  else if (equal(tok, "+")) {
-    return primary(rest, tok->next);
+  else if (equal(info->tok, "+")) {
+    return primary(advance_tok(info));
   }
   else {
-    return primary(rest, tok);
+    return primary(info);
   }
 }
 
 // primary = ident | num | "(" expr ")"
-static Node *primary(Token **rest, Token *tok) {
-  if (equal(tok, "(")) {
-    Node *node = expr(&tok, tok->next);
-    *rest = skip(tok, ")");
+static Node *primary(ParseInfo *info) {
+  if (equal(info->tok, "(")) {
+    Node *node = expr(advance_tok(info));
+    info->tok = skip(info->tok, ")");
     return node;
   }
-  else if (tok->kind == TK_IDENT) {
+  else if (info->tok->kind == TK_IDENT) {
     Node *node = new_node(ND_VAR);
-    node->name = *tok->loc;
-    *rest = tok->next;
+    node->name = *info->tok->loc;
+    advance_tok(info);
     return node;
   }
-  Node *node = new_num(get_number(tok));
-  *rest = tok->next;
+  Node *node = new_num(get_number(info->tok));
+  advance_tok(info);
   return node;
 }
 
 // parser entry
 Node *parse(Token *tok) {
-  return program(&tok, tok);
+  ParseInfo info;
+  info.tok = tok;
+  return program(&info);
 }
