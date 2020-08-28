@@ -41,8 +41,7 @@ static void store() {
 
 static void gen_addr(Node *node) {
   if (node->kind == ND_VAR) {
-    int offset = (node->name - 'a' + 1) * 8;
-    emit("lea rax, [rbp-%d]", offset);
+    emit("lea rax, [rbp-%d]", node->var->offset);
     emit("push rax");
   }
   else {
@@ -129,15 +128,15 @@ static void gen_stmt(Node *node) {
   }
 }
 
-void codegen(Node *node) {
+void codegen(Function *prog) {
   emit_head();
   emit("main:");
 
   // prologue
   emit("push rbp");
   emit("mov rbp, rsp");
-  emit("sub rsp, 208");
-  for (Node *cur = node; cur; cur = cur->next) {
+  emit("sub rsp, %u", prog->stack_size);
+  for (Node *cur = prog->node; cur; cur = cur->next) {
     gen_stmt(cur);
   }
   emit(".L.return:");

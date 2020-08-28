@@ -52,6 +52,14 @@ typedef enum {
   ND_NUM,                       // numeric
 } NodeKind;
 
+// Local variable
+typedef struct Var Var;
+struct Var {
+  Var *next;
+  const char *name;
+  int offset;
+};
+
 // AST node type
 typedef struct Node Node;
 struct Node {
@@ -59,22 +67,31 @@ struct Node {
   Node *next;                   // Next node
   Node *lhs;                    // 左辺
   Node *rhs;                    // 右辺
-  char name;                    // ND_VARのときに使う
+  Var *var;                     // ND_VARのときに使う
   int val;                      // ND_NUMのときに使う
 };
 
 typedef struct ParseInfo {
   Token *tok;
-}ParseInfo;
+  Var *locals;
+  int stack_size;
+} ParseInfo;
+
+typedef struct Function Function;
+struct Function {
+  Node *node;
+  Var *locals;
+  int stack_size;
+};
 
 void walk_real(Node *node, int depth);
-Node *parse(Token *tok);
-
 #define walk(node) walk_real(node, 0)
+
+Function *program(Token *tok);
 
 ////////////////////////////////////////////////////////////////
 /// codegen.c
-void codegen(Node *node);
+void codegen(Function *prog);
 
 ////////////////////////////////////////////////////////////////
 // report.c
@@ -93,3 +110,4 @@ void report(const char *fmt, ...);
 ////////////////////////////////////////////////////////////////
 // utility.c
 char *strndup(const char *s, size_t n);
+size_t startswith(const char *s, const char *key);

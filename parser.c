@@ -31,7 +31,7 @@ static void walk_one(Node *node, int depth) {
     return;
   }
   else if (node->kind == ND_VAR) {
-    report("var: %c\n", node->name);
+    report("var: %s\n", node->var->name);
     return;
   }
   char *op;
@@ -85,7 +85,6 @@ void walk_real(Node *node, int depth) {
   }
 }
 
-static Node *program(ParseInfo *info);
 static Node *stmt(ParseInfo *info);
 static Node *expr_stmt(ParseInfo *info);
 static Node *expr(ParseInfo *info);
@@ -101,16 +100,55 @@ static ParseInfo *advance_tok(ParseInfo *info) {
   info->tok = info->tok->next;
   return info;
 }
+static bool at_eot(ParseInfo *info) {
+  return info->tok->kind == TK_EOF;
+}
+
+static Var *find_var(Var *var, const char *ident) {
+  for (; var; var = var->next) {
+    if (strcmp(var->name, ident) == 0) {
+      return var;
+    }
+  }
+  return NULL;
+}
+
+static Var *find_or_new_var(Var *var, const char *ident) {
+  Var *v = find_var(var, ident);
+  if (!v) {
+    v = calloc(sizeof(Var), 1);
+    v->name = ident;
+    for (Var *w = var; ; w = w->next) {
+      if (!w->next) {
+        w->next = v;
+        break;
+      }
+    }
+  }
+  return v;
+}
 
 // program = stmt*
-static Node *program(ParseInfo *info) {
+Function *program(Token *tok) {
+  Var var = {0};
+  var.name = "";
+
+  ParseInfo info;
+  info.tok = tok;
+  info.locals = &var;
+
   Node head = {}, *cur = &head, *next;
-  while (info->tok->kind != TK_EOF) {
-    next = stmt(info);
+
+  while (!at_eot(&info)) {
+    next = stmt(&info);
     cur->next = next;
     cur = next;
   }
-  return head.next;
+  Function *func = calloc(sizeof(Function), 1);
+  func->locals = info.locals->next;
+  func->stack_size = 0;
+  func->node = head.next;
+  return func;
 }
 
 // stmt = "return" expr ";"
@@ -256,19 +294,14 @@ static Node *primary(ParseInfo *info) {
     return node;
   }
   else if (info->tok->kind == TK_IDENT) {
+    char *name = strndup(info->tok->loc, info->tok->len);
+    Var *var = find_or_new_var(info->locals, name);
     Node *node = new_node(ND_VAR);
-    node->name = *info->tok->loc;
+    node->var = var;
     advance_tok(info);
     return node;
   }
   Node *node = new_num(get_number(info->tok));
   advance_tok(info);
   return node;
-}
-
-// parser entry
-Node *parse(Token *tok) {
-  ParseInfo info;
-  info.tok = tok;
-  return program(&info);
 }

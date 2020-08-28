@@ -23,7 +23,7 @@ assert () {
     fi
 }
 assert 3 'a=3; return a;'
-assert 8 'a=3; z=5; return a+z;'
+assert 8 'abc=3; xyzz=5; return abc+xyzz;'
 assert 6 'a=b=3; return a+b;'
 assert 10 'return 10;'
 assert 3 '1;2; return 3;'

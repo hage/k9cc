@@ -18,13 +18,6 @@ static int is_nameletter2(char c) {
   return is_nameletter1(c) || isdigit(c);
 }
 
-// sがkeyで始まっているときkeyの長さを返す。
-// 始まっていないときは0を返す。
-static size_t startswith(const char *s, const char *key) {
-  size_t len = strlen(key);
-  return strncmp(s, key, len) == 0 ? len : 0;
-}
-
 long get_number(Token *tok) {
   if (!tok || tok->kind != TK_NUM) {
     error_tok(tok, "lexser/数字が必要です");
@@ -152,7 +145,11 @@ Token *tokenize(char *src) {
 
     // Identifire
     if (isalpha(*src)) {
-      cur = new_token(TK_IDENT, cur, src++, 1, column);
+      char *p;
+      for (p = src + 1; *p && is_nameletter2(*p); p++)
+        ;
+      cur = new_token(TK_IDENT, cur, src, p - src, column);
+      src = p;
       continue;
     }
 
