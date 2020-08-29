@@ -139,7 +139,17 @@ Token *tokenize(char *src) {
       continue;
     }
 
-    if (keyword(&cur, &src, "return", column)) {
+    static char *keywords[] = {
+      "return", "if", "else",
+      NULL
+    };
+    char **kwd = keywords;
+    for (; *kwd; kwd++) {
+      if (keyword(&cur, &src, *kwd, column)) {
+        break;
+      }
+    }
+    if (*kwd) {
       continue;
     }
 

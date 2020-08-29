@@ -34,6 +34,18 @@ static void walk_one(Node *node, int depth) {
     report("var: %s\n", node->var->name);
     return;
   }
+  else if (node->kind == ND_IF) {
+    report("if:\n");
+    report("cond:\n");
+    walk_one(node->cond, depth + 2);
+    report("then-clause:\n");
+    walk_one(node->then, depth + 2);
+    if (node->els) {
+      report("else-clause:\n");
+      walk_one(node->els, depth + 2);
+    }
+    return;
+  }
   char *op;
   switch (node->kind) {
   case ND_ADD:
@@ -100,6 +112,10 @@ static ParseInfo *advance_tok(ParseInfo *info) {
   info->tok = info->tok->next;
   return info;
 }
+static ParseInfo *skip_tok(ParseInfo *info, const char *key) {
+  info->tok = skip(info->tok, key);
+  return info;
+}
 static bool at_eot(ParseInfo *info) {
   return info->tok->kind == TK_EOF;
 }
@@ -152,12 +168,25 @@ Function *program(Token *tok) {
 }
 
 // stmt = "return" expr ";"
+//      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | expr-stmt
 static Node *stmt(ParseInfo *info) {
   if (equal(info->tok, "return")) {
     Node *node = new_node(ND_RETURN);
     node->lhs = expr(advance_tok(info));
     info->tok = skip(info->tok, ";");
+    return node;
+  }
+  else if (equal(info->tok, "if")) {
+    Node *node = new_node(ND_IF);
+    skip_tok(advance_tok(info), "(");
+    node->cond = expr(info);
+    skip_tok(info, ")");
+    node->then = stmt(info);
+    if (equal(info->tok, "else")) {
+      advance_tok(info);
+      node->els = stmt(info);
+    }
     return node;
   }
   return expr_stmt(info);

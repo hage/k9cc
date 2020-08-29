@@ -123,6 +123,25 @@ static void gen_stmt(Node *node) {
     gen_expr(node->lhs);
     emit("add rsp, 8");
     break;
+  case ND_IF:
+    gen_expr(node->cond);
+    emit("pop rax");
+    emit("cmp rax, 0");
+
+    if (node->els) {
+      emit("je .Lelse");
+      gen_stmt(node->then);
+      emit("jmp .Lend");
+      emit(".Lelse:");
+      gen_stmt(node->els);
+      emit(".Lend:");
+    }
+    else {
+      emit("je .Lend");
+      gen_stmt(node->then);
+      emit(".Lend:");
+    }
+    break;
   default:
     error("invalid statement");
   }

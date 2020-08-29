@@ -22,6 +22,12 @@ assert () {
         exit 1
     fi
 }
+assert 10 'if (1) return 10; else return 0;'
+assert 10 'if (0) return 100; else return 10;'
+assert 20 'if (0) return 100; return 20;'
+assert 100 'if (1) return 100; return 20;'
+assert 100 'a=100; b=100; if (a==b) return b; return a;'
+assert 101 'a=101; b=100; if (a==b) return b; return a;'
 assert 3 'a=3; return a;'
 assert 8 'abc=3; xyzz=5; return abc+xyzz;'
 assert 6 'a=b=3; return a+b;'
