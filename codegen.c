@@ -6,6 +6,15 @@
 #include <assert.h>
 #include "k9cc.h"
 
+typedef struct GenInfo {
+  char *name;
+} GenInfo;
+
+static int sequence() {
+  static int seq = 0;
+  return seq++;
+}
+
 static void emit(const char *fmt, ...) {
   FILE *fpout = stdout;
   size_t len = strlen(fmt);
@@ -39,7 +48,7 @@ static void store() {
   emit("push rdi");
 }
 
-static void gen_addr(Node *node) {
+static void gen_addr(Node *node, GenInfo *_info) {
   if (node->kind == ND_VAR) {
     emit("lea rax, [rbp-%d]", node->var->offset);
     emit("push rax");
@@ -49,15 +58,15 @@ static void gen_addr(Node *node) {
   }
 }
 
-static void gen_expr(Node *node) {
+static void gen_expr(Node *node, GenInfo *info) {
   switch (node->kind) {
   case ND_ASSIGN:
-    gen_addr(node->lhs);
-    gen_expr(node->rhs);
+    gen_addr(node->lhs, info);
+    gen_expr(node->rhs, info);
     store();
     return;
   case ND_VAR:
-    gen_addr(node);
+    gen_addr(node, info);
     load();
     return;
   case ND_NUM:
@@ -65,8 +74,8 @@ static void gen_expr(Node *node) {
     return;
   }
 
-  gen_expr(node->lhs);
-  gen_expr(node->rhs);
+  gen_expr(node->lhs, info);
+  gen_expr(node->rhs, info);
 
   emit("pop rdi");
   emit("pop rax");
@@ -112,44 +121,48 @@ static void gen_expr(Node *node) {
   emit("push rax");
 }
 
-static void gen_stmt(Node *node) {
+static void gen_stmt(Node *node, GenInfo *info) {
+  int seq;
   switch (node->kind) {
   case ND_RETURN:
-    gen_expr(node->lhs);
+    gen_expr(node->lhs, info);
     emit("pop rax");
-    emit("jmp .L.return");
+    emit("jmp .L.return_%s", info->name);
     break;
   case ND_EXPR_STMT:
-    gen_expr(node->lhs);
+    gen_expr(node->lhs, info);
     emit("add rsp, 8");
     break;
   case ND_IF:
-    gen_expr(node->cond);
+    gen_expr(node->cond, info);
     emit("pop rax");
     emit("cmp rax, 0");
 
     if (node->els) {
-      emit("je .Lelse");
-      gen_stmt(node->then);
-      emit("jmp .Lend");
-      emit(".Lelse:");
-      gen_stmt(node->els);
-      emit(".Lend:");
+      seq = sequence();
+      emit("je .L.else_%s%d", info->name, seq);
+      gen_stmt(node->then, info);
+      emit("jmp .L.end_%s%d", info->name, seq);
+      emit(".L.else_%s%d:", info->name, seq);
+      gen_stmt(node->els, info);
+      emit(".L.end_%s%d:", info->name, seq);
     }
     else {
-      emit("je .Lend");
-      gen_stmt(node->then);
-      emit(".Lend:");
+      seq = sequence();
+      emit("je .L.end_%s%d", info->name, seq);
+      gen_stmt(node->then, info);
+      emit(".L.end_%s%d:", info->name, seq);
     }
   case ND_WHILE:
-    emit(".L.while:");
-    gen_expr(node->cond);
+    seq = sequence();
+    emit(".L.while_%s%d:", info->name, seq);
+    gen_expr(node->cond, info);
     emit("pop rax");
     emit("cmp rax, 0");
-    emit("je .L.end");
-    gen_stmt(node->then);
-    emit("jmp .L.while");
-    emit(".L.end:");
+    emit("je .L.end_%s%d", info->name, seq);
+    gen_stmt(node->then, info);
+    emit("jmp .L.while_%s%d", info->name, seq);
+    emit(".L.end_%s%d:", info->name, seq);
     break;
   default:
     error("invalid statement");
@@ -157,6 +170,9 @@ static void gen_stmt(Node *node) {
 }
 
 void codegen(Function *prog) {
+  GenInfo info;
+  info.name = "main";
+
   emit_head();
   emit("main:");
 
@@ -165,9 +181,9 @@ void codegen(Function *prog) {
   emit("mov rbp, rsp");
   emit("sub rsp, %u", prog->stack_size);
   for (Node *cur = prog->node; cur; cur = cur->next) {
-    gen_stmt(cur);
+    gen_stmt(cur, &info);
   }
-  emit(".L.return:");
+  emit(".L.return_%s:", info.name);
   emit("mov rsp, rbp");
   emit("pop rbp");
   emit("ret");
