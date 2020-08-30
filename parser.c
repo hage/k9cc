@@ -119,6 +119,16 @@ static ParseInfo *skip_tok(ParseInfo *info, const char *key) {
 static bool at_eot(ParseInfo *info) {
   return info->tok->kind == TK_EOF;
 }
+static bool peek(ParseInfo *info, const char *key) {
+  return info->tok->kind == TK_RESERVED && equal(info->tok, key);
+}
+static bool consume(ParseInfo *info, const char *key) {
+  if (peek(info, key)) {
+    skip_tok(info, key);
+    return true;
+  }
+  return false;
+}
 
 static Var *find_var(Var *var, const char *ident) {
   for (; var; var = var->next) {
@@ -171,6 +181,7 @@ Function *program(Token *tok) {
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
+//      | "{" stmt* "}"
 //      | expr-stmt
 static Node *stmt(ParseInfo *info) {
   if (equal(info->tok, "return")) {
@@ -218,6 +229,17 @@ static Node *stmt(ParseInfo *info) {
     }
     skip_tok(info, ")");
     node->then = stmt(info);
+    return node;
+  }
+  else if (equal(info->tok, "{")) {
+    Node *node = new_node(ND_BLOCK);
+    Node top, *cur = &top;
+    advance_tok(info);
+    while (!consume(info, "}")) {
+      cur->next = stmt(info);
+      cur = cur->next;
+    }
+    node->body = top.next;
     return node;
   }
   return expr_stmt(info);

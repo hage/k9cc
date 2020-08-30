@@ -50,6 +50,7 @@ typedef enum {
   ND_IF,                        // "if"
   ND_WHILE,                     // "while"
   ND_FOR,                       // "for"
+  ND_BLOCK,                     // "{}"
   ND_EXPR_STMT,                 // Expression statement
   ND_VAR,                       // Variable
   ND_NUM,                       // numeric
@@ -78,6 +79,8 @@ struct Node {
   Node *els;                    // if
   Node *init;                   // for
   Node *succ;                   // for
+
+  Node *body;                   // block
 };
 
 typedef struct ParseInfo {

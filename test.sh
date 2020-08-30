@@ -22,6 +22,8 @@ assert () {
         exit 1
     fi
 }
+assert 55 'for(sum=i=0;i<11;i=i+1){b=i;sum=sum+b;}return sum;'
+assert 55 'sum = 0; for(i=0;i<11;i=i+1){sum=sum+i;}return sum;'
 assert 24 'for(;0;)return 42;return 24;'
 assert 42 'for(;1;)return 42;return 24;'
 assert 10 'i=0;for(;i<10;)i=i+1;return i;'

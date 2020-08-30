@@ -183,6 +183,11 @@ static void gen_stmt(Node *node, GenInfo *info) {
     emit("jmp .L.begin_%s%d", info->name, seq);
     emit(".L.end_%s%d:", info->name, seq);
     break;
+  case ND_BLOCK:
+    for (Node *cur = node->body; cur; cur = cur->next) {
+      gen_stmt(cur, info);
+    }
+    break;
   default:
     error("invalid statement");
   }
