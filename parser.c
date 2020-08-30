@@ -184,35 +184,34 @@ Function *program(Token *tok) {
 //      | "{" stmt* "}"
 //      | expr-stmt
 static Node *stmt(ParseInfo *info) {
-  if (equal(info->tok, "return")) {
+  if (consume(info, "return")) {
     Node *node = new_node(ND_RETURN);
-    node->lhs = expr(advance_tok(info));
-    info->tok = skip(info->tok, ";");
+    node->lhs = expr(info);
+    skip_tok(info, ";");
     return node;
   }
-  else if (equal(info->tok, "if")) {
+  else if (consume(info, "if")) {
     Node *node = new_node(ND_IF);
-    skip_tok(advance_tok(info), "(");
+    skip_tok(info, "(");
     node->cond = expr(info);
     skip_tok(info, ")");
     node->then = stmt(info);
-    if (equal(info->tok, "else")) {
-      advance_tok(info);
+    if (consume(info, "else")) {
       node->els = stmt(info);
     }
     return node;
   }
-  else if (equal(info->tok, "while")) {
+  else if (consume(info, "while")) {
     Node *node = new_node(ND_WHILE);
-    skip_tok(advance_tok(info), "(");
+    skip_tok(info, "(");
     node->cond = expr(info);
     skip_tok(info, ")");
     node->then = stmt(info);
     return node;
   }
-  else if (equal(info->tok, "for")) {
+  else if (consume(info, "for")) {
     Node *node = new_node(ND_FOR);
-    skip_tok(advance_tok(info), "(");
+    skip_tok(info, "(");
 
     if (!equal(info->tok, ";")) {
       node->init = expr(info);
@@ -231,10 +230,9 @@ static Node *stmt(ParseInfo *info) {
     node->then = stmt(info);
     return node;
   }
-  else if (equal(info->tok, "{")) {
+  else if (consume(info, "{")) {
     Node *node = new_node(ND_BLOCK);
     Node top, *cur = &top;
-    advance_tok(info);
     while (!consume(info, "}")) {
       cur->next = stmt(info);
       cur = cur->next;
@@ -249,7 +247,7 @@ static Node *stmt(ParseInfo *info) {
 static Node *expr_stmt(ParseInfo *info) {
   Node *node = new_node(ND_EXPR_STMT);
   node->lhs = expr(info);
-  info->tok = skip(info->tok, ";");
+  skip_tok(info, ";");
   return node;
 }
 
@@ -261,8 +259,8 @@ static Node *expr(ParseInfo *info) {
 // assign = equality ("=" assign)?
 static Node *assign(ParseInfo *info) {
   Node *lhs = equality(info);
-  if (equal(info->tok, "=")) {
-    Node *rhs = assign(advance_tok(info));
+  if (consume(info, "=")) {
+    Node *rhs = assign(info);
     Node *node = new_binary(ND_ASSIGN, lhs, rhs);
     return node;
   }
@@ -276,13 +274,13 @@ static Node *equality(ParseInfo *info) {
   Node *node = relational(info);
 
   for (;;) {
-    if (equal(info->tok, "==")) {
-      Node *rhs = relational(advance_tok(info));
+    if (consume(info, "==")) {
+      Node *rhs = relational(info);
       node = new_binary(ND_EQ, node, rhs);
       continue;
     }
-    if (equal(info->tok, "!=")) {
-      Node *rhs = relational(advance_tok(info));
+    if (consume(info, "!=")) {
+      Node *rhs = relational(info);
       node = new_binary(ND_NE, node, rhs);
       continue;
     }
@@ -294,23 +292,23 @@ static Node *equality(ParseInfo *info) {
 static Node *relational(ParseInfo *info) {
   Node *node = add(info);
   for (;;) {
-    if (equal(info->tok, "<")) {
-      Node *rhs = add(advance_tok(info));
+    if (consume(info, "<")) {
+      Node *rhs = add(info);
       node = new_binary(ND_LT, node, rhs);
       continue;
     }
-    if (equal(info->tok, "<=")) {
-      Node *rhs = add(advance_tok(info));
+    if (consume(info, "<=")) {
+      Node *rhs = add(info);
       node = new_binary(ND_LE, node, rhs);
       continue;
     }
-    if (equal(info->tok, ">")) {
-      Node *rhs = add(advance_tok(info));
+    if (consume(info, ">")) {
+      Node *rhs = add(info);
       node = new_binary(ND_LT, rhs, node);
       continue;
     }
-    if (equal(info->tok, ">=")) {
-      Node *rhs = add(advance_tok(info));
+    if (consume(info, ">=")) {
+      Node *rhs = add(info);
       node = new_binary(ND_LE, rhs, node);
       continue;
     }
@@ -323,13 +321,13 @@ static Node *add(ParseInfo *info) {
   Node *node = mul(info);
 
   for (;;) {
-    if (equal(info->tok, "+")) {
-      Node *rhs = mul(advance_tok(info));
+    if (consume(info, "+")) {
+      Node *rhs = mul(info);
       node = new_binary(ND_ADD, node, rhs);
       continue;
     }
-    if (equal(info->tok, "-")) {
-      Node *rhs = mul(advance_tok(info));
+    if (consume(info, "-")) {
+      Node *rhs = mul(info);
       node = new_binary(ND_SUB, node, rhs);
       continue;
     }
@@ -342,13 +340,13 @@ static Node *mul(ParseInfo *info) {
   Node *node = unary(info);
 
   for (;;) {
-    if (equal(info->tok, "*")) {
-      Node *rhs = unary(advance_tok(info));
+    if (consume(info, "*")) {
+      Node *rhs = unary(info);
       node = new_binary(ND_MUL, node, rhs);
       continue;
     }
-    if (equal(info->tok, "/")) {
-      Node *rhs = unary(advance_tok(info));
+    if (consume(info, "/")) {
+      Node *rhs = unary(info);
       node = new_binary(ND_DIV, node, rhs);
       continue;
     }
@@ -357,11 +355,11 @@ static Node *mul(ParseInfo *info) {
 }
 // unary   = ("+" | "-") ? primary
 static Node *unary(ParseInfo *info) {
-  if (equal(info->tok, "-")) {
-    return new_binary(ND_SUB, new_num(0), primary(advance_tok(info)));
+  if (consume(info, "-")) {
+    return new_binary(ND_SUB, new_num(0), primary(info));
   }
-  else if (equal(info->tok, "+")) {
-    return primary(advance_tok(info));
+  else if (consume(info, "+")) {
+    return primary(info);
   }
   else {
     return primary(info);
@@ -370,8 +368,8 @@ static Node *unary(ParseInfo *info) {
 
 // primary = ident | num | "(" expr ")"
 static Node *primary(ParseInfo *info) {
-  if (equal(info->tok, "(")) {
-    Node *node = expr(advance_tok(info));
+  if (consume(info, "(")) {
+    Node *node = expr(info);
     info->tok = skip(info->tok, ")");
     return node;
   }
