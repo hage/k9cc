@@ -22,6 +22,7 @@ assert () {
         exit 1
     fi
 }
+assert 11 'a=0;while(a<=10)a=a+1;return a;'
 assert 10 'if (1) return 10; else return 0;'
 assert 10 'if (0) return 100; else return 10;'
 assert 20 'if (0) return 100; return 20;'

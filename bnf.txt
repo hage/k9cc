@@ -1,6 +1,7 @@
 program         = stmt*
 stmt            = "return" expr ";"
                 | "if" "(" expr ")" stmt ("else" stmt)?
+                | "while" "(" expr ")" stmt
                 | expr-stmt
 expr-stmt       = expr ";"
 expr            = assign

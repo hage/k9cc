@@ -141,6 +141,15 @@ static void gen_stmt(Node *node) {
       gen_stmt(node->then);
       emit(".Lend:");
     }
+  case ND_WHILE:
+    emit(".L.while:");
+    gen_expr(node->cond);
+    emit("pop rax");
+    emit("cmp rax, 0");
+    emit("je .L.end");
+    gen_stmt(node->then);
+    emit("jmp .L.while");
+    emit(".L.end:");
     break;
   default:
     error("invalid statement");

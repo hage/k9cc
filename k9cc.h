@@ -48,6 +48,7 @@ typedef enum {
   ND_ASSIGN,                    // =
   ND_RETURN,                    // "return"
   ND_IF,                        // "if"
+  ND_WHILE,                     // "while"
   ND_EXPR_STMT,                 // Expression statement
   ND_VAR,                       // Variable
   ND_NUM,                       // numeric
@@ -71,10 +72,9 @@ struct Node {
   Var *var;                     // ND_VARのときに使う
   int val;                      // ND_NUMのときに使う
 
-  // ND_IFのとき
-  Node *cond;
-  Node *then;
-  Node *els;
+  Node *cond;                   // if, while
+  Node *then;                   // if, while
+  Node *els;                    // if
 };
 
 typedef struct ParseInfo {
