@@ -22,6 +22,10 @@ assert () {
         exit 1
     fi
 }
+assert 24 'for(;0;)return 42;return 24;'
+assert 42 'for(;1;)return 42;return 24;'
+assert 10 'i=0;for(;i<10;)i=i+1;return i;'
+assert 55 'sum=0;for(i=0;i<11;i=i+1)sum=sum+i;return sum;'
 assert 42 'a=0;while(a<10)if(a==5)return 42;else a=a+1;'
 assert 11 'a=0;while(a<=10)a=a+1;return a;'
 assert 10 'if (1) return 10; else return 0;'

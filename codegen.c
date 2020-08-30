@@ -164,6 +164,25 @@ static void gen_stmt(Node *node, GenInfo *info) {
     emit("jmp .L.while_%s%d", info->name, seq);
     emit(".L.end_%s%d:", info->name, seq);
     break;
+  case ND_FOR:
+    seq = sequence();
+    if (node->init) {
+      gen_expr(node->init, info);
+    }
+    emit(".L.begin_%s%d:", info->name, seq);
+    if (node->cond) {
+      gen_expr(node->cond, info);
+      emit("pop rax");
+      emit("cmp rax, 0");
+      emit("je .L.end_%s%d", info->name, seq);
+      gen_stmt(node->then, info);
+    }
+    if (node->succ) {
+      gen_expr(node->succ, info);
+    }
+    emit("jmp .L.begin_%s%d", info->name, seq);
+    emit(".L.end_%s%d:", info->name, seq);
+    break;
   default:
     error("invalid statement");
   }

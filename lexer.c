@@ -140,7 +140,7 @@ Token *tokenize(char *src) {
     }
 
     static char *keywords[] = {
-      "return", "if", "else", "while",
+      "return", "if", "else", "while", "for",
       NULL
     };
     char **kwd = keywords;

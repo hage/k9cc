@@ -170,6 +170,7 @@ Function *program(Token *tok) {
 // stmt = "return" expr ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "while" "(" expr ")" stmt
+//      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | expr-stmt
 static Node *stmt(ParseInfo *info) {
   if (equal(info->tok, "return")) {
@@ -194,6 +195,27 @@ static Node *stmt(ParseInfo *info) {
     Node *node = new_node(ND_WHILE);
     skip_tok(advance_tok(info), "(");
     node->cond = expr(info);
+    skip_tok(info, ")");
+    node->then = stmt(info);
+    return node;
+  }
+  else if (equal(info->tok, "for")) {
+    Node *node = new_node(ND_FOR);
+    skip_tok(advance_tok(info), "(");
+
+    if (!equal(info->tok, ";")) {
+      node->init = expr(info);
+    }
+    skip_tok(info, ";");
+
+    if (!equal(info->tok, ";")) {
+      node->cond = expr(info);
+    }
+    skip_tok(info, ";");
+
+    if (!equal(info->tok, ")")) {
+      node->succ = expr(info);
+    }
     skip_tok(info, ")");
     node->then = stmt(info);
     return node;
