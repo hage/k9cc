@@ -106,6 +106,7 @@ static Node *relational(ParseInfo *info);
 static Node *add(ParseInfo *info);
 static Node *mul(ParseInfo *info);
 static Node *unary(ParseInfo *info);
+static Node *func_args(ParseInfo *info);
 static Node *primary(ParseInfo *info);
 
 static ParseInfo *advance_tok(ParseInfo *info) {
@@ -365,17 +366,33 @@ static Node *unary(ParseInfo *info) {
     return primary(info);
   }
 }
-// primary = ident ("(" ")")?
+
+// func-args = "(" assign ("," assign)* ")"
+static Node *func_args(ParseInfo *info) {
+  skip_tok(info, "(");
+  if (consume(info, ")")) {
+    return NULL;
+  }
+  Node *top = assign(info), *n = top;
+  while (consume(info, ",")) {
+    n->next = assign(info);
+    n = n->next;
+  }
+  skip_tok(info, ")");
+  return top;
+}
+
+// primary = ident func-args?
 //         | "(" expr ")"
 //         | num
 static Node *primary(ParseInfo *info) {
   if (info->tok->kind == TK_IDENT) {
     char *name = strndup(info->tok->loc, info->tok->len);
     advance_tok(info);
-    if (consume(info, "(")) {
-      skip_tok(info, ")");
+    if (peek(info, "(")) {
       Node *node = new_node(ND_FUNCALL);
       node->name = name;
+      node->args = func_args(info);
       return node;
     }
     else {

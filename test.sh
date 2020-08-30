@@ -45,7 +45,8 @@ assert_exsrc() {
         exit 1
     fi
 }
-
+assert_exsrc 231 test/add2.c 'return add_each2_and_multiply(1,2,3,4,5,6);'
+assert_exsrc 42 test/add2.c 'return add2(add2(10, 30), 2);'
 assert_exsrc 42 test/value40.c 'return value40() + 2;'
 
 assert 55 'for(sum=i=0;i<11;i=i+1){b=i;sum=sum+b;}return sum;'

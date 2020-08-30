@@ -10,6 +10,17 @@ typedef struct GenInfo {
   char *name;
 } GenInfo;
 
+static int sequence();
+static void emit(const char *fmt, ...);
+static void emit_head(void);
+static void load();
+static void store();
+static void gen_addr(Node *node, GenInfo *_info);
+static void gen_args(Node *node, GenInfo *info);
+static void gen_expr(Node *node, GenInfo *info);
+static void gen_stmt(Node *node, GenInfo *info);
+
+
 static int sequence() {
   static int seq = 0;
   return seq++;
@@ -58,6 +69,22 @@ static void gen_addr(Node *node, GenInfo *_info) {
   }
 }
 
+static void gen_args(Node *node, GenInfo *info) {
+  static char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+  static const int nargreg = sizeof(argreg) / sizeof(argreg[1]);
+  int nargs = 0;
+  for (Node *arg = node; arg; arg = arg->next) {
+    nargs++;
+    gen_expr(arg, info);
+  }
+  if (nargreg < nargs) {
+    error("number of argument out of range");
+  }
+  for (int i = nargs - 1; 0 <= i; i--) {
+    emit("pop %s", argreg[i]);
+  }
+}
+
 static void gen_expr(Node *node, GenInfo *info) {
   int seq;
   switch (node->kind) {
@@ -75,6 +102,7 @@ static void gen_expr(Node *node, GenInfo *info) {
     return;
   case ND_FUNCALL:
     seq = sequence();
+    gen_args(node->args, info);
     // rspを16の倍数に揃える
     //   判別
     emit("mov rax, rsp");

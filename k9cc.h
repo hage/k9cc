@@ -84,6 +84,7 @@ struct Node {
   Node *body;                   // block
 
   char *name;                   // funcall
+  Node *args;                   // arguments
 };
 
 typedef struct ParseInfo {
