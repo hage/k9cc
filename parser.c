@@ -368,12 +368,7 @@ static Node *unary(ParseInfo *info) {
 
 // primary = ident | num | "(" expr ")"
 static Node *primary(ParseInfo *info) {
-  if (consume(info, "(")) {
-    Node *node = expr(info);
-    info->tok = skip(info->tok, ")");
-    return node;
-  }
-  else if (info->tok->kind == TK_IDENT) {
+  if (info->tok->kind == TK_IDENT) {
     char *name = strndup(info->tok->loc, info->tok->len);
     Var *var = find_or_new_var(info->locals, name);
     Node *node = new_node(ND_VAR);
@@ -381,7 +376,14 @@ static Node *primary(ParseInfo *info) {
     advance_tok(info);
     return node;
   }
-  Node *node = new_num(get_number(info->tok));
-  advance_tok(info);
-  return node;
+  else if (consume(info, "(")) {
+    Node *node = expr(info);
+    info->tok = skip(info->tok, ")");
+    return node;
+  }
+  else {
+    Node *node = new_num(get_number(info->tok));
+    advance_tok(info);
+    return node;
+  }
 }
