@@ -373,7 +373,7 @@ static Node *primary(ParseInfo *info) {
     char *name = strndup(info->tok->loc, info->tok->len);
     advance_tok(info);
     if (consume(info, "(")) {
-      advance_tok(info);
+      skip_tok(info, ")");
       Node *node = new_node(ND_FUNCALL);
       node->name = name;
       return node;
