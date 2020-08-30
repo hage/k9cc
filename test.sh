@@ -22,6 +22,32 @@ assert () {
         exit 1
     fi
 }
+
+assert_exsrc() {
+    local exfile="tmp"
+    local asfile="tmp.s"
+    local expected="$1"
+    local exsrc="$2"
+    local input="$3"
+
+    ./$CC "$input" > $asfile
+    cc -o $exfile $asfile $exsrc
+
+    ./$exfile
+    local actual="$?"
+
+    # rm -f $exfile $asfile
+
+    if [ "$actual" = "$expected" ]; then
+        echo "$input => $actual"
+    else
+        echo "$input => $expected expected, but got $actual"
+        exit 1
+    fi
+}
+
+assert_exsrc 42 test/value40.c 'return value40() + 2;'
+
 assert 55 'for(sum=i=0;i<11;i=i+1){b=i;sum=sum+b;}return sum;'
 assert 55 'sum = 0; for(i=0;i<11;i=i+1){sum=sum+i;}return sum;'
 assert 24 'for(;0;)return 42;return 24;'

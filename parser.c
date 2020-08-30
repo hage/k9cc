@@ -365,16 +365,25 @@ static Node *unary(ParseInfo *info) {
     return primary(info);
   }
 }
-
-// primary = ident | num | "(" expr ")"
+// primary = ident ("(" ")")?
+//         | "(" expr ")"
+//         | num
 static Node *primary(ParseInfo *info) {
   if (info->tok->kind == TK_IDENT) {
     char *name = strndup(info->tok->loc, info->tok->len);
-    Var *var = find_or_new_var(info->locals, name);
-    Node *node = new_node(ND_VAR);
-    node->var = var;
     advance_tok(info);
-    return node;
+    if (consume(info, "(")) {
+      advance_tok(info);
+      Node *node = new_node(ND_FUNCALL);
+      node->name = name;
+      return node;
+    }
+    else {
+      Var *var = find_or_new_var(info->locals, name);
+      Node *node = new_node(ND_VAR);
+      node->var = var;
+      return node;
+    }
   }
   else if (consume(info, "(")) {
     Node *node = expr(info);

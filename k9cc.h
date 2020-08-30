@@ -54,6 +54,7 @@ typedef enum {
   ND_EXPR_STMT,                 // Expression statement
   ND_VAR,                       // Variable
   ND_NUM,                       // numeric
+  ND_FUNCALL,                   // function call
 } NodeKind;
 
 // Local variable
@@ -81,6 +82,8 @@ struct Node {
   Node *succ;                   // for
 
   Node *body;                   // block
+
+  char *name;                   // funcall
 };
 
 typedef struct ParseInfo {

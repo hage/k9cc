@@ -59,6 +59,7 @@ static void gen_addr(Node *node, GenInfo *_info) {
 }
 
 static void gen_expr(Node *node, GenInfo *info) {
+  int seq;
   switch (node->kind) {
   case ND_ASSIGN:
     gen_addr(node->lhs, info);
@@ -71,6 +72,25 @@ static void gen_expr(Node *node, GenInfo *info) {
     return;
   case ND_NUM:
     emit("push %ld", node->val);
+    return;
+  case ND_FUNCALL:
+    seq = sequence();
+    // rspを16の倍数に揃える
+    //   判別
+    emit("mov rax, rsp");
+    emit("and rax, 15");
+    emit("jnz .L.noalign_%s%d", info->name, seq);
+    //   揃っているとき
+    emit("call %s", node->name);
+    emit("jmp .L.end_%s%d", info->name, seq);
+    //   揃っていなかったとき
+    emit(".L.noalign_%s%d:", info->name, seq);
+    emit("sub rsp, 8");
+    emit("call %s", node->name);
+    emit("add rsp, 8");
+    // finish
+    emit(".L.end_%s%d:", info->name, seq);
+    emit("push rax");
     return;
   }
 
