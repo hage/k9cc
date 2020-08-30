@@ -26,7 +26,11 @@ static Node *new_num(long val) {
 
 static void walk_one(Node *node, int depth) {
   report("%*s", depth, "");
-  if (node->kind == ND_NUM) {
+  if (!node) {
+    report("_\n");
+    return;
+  }
+  else if (node->kind == ND_NUM) {
     report("num: %ld\n", node->val);
     return;
   }
@@ -44,6 +48,30 @@ static void walk_one(Node *node, int depth) {
       report("else-clause:\n");
       walk_one(node->els, depth + 2);
     }
+    return;
+  }
+  else if (node->kind == ND_WHILE) {
+    report("while:\n");
+    report("cond:\n");
+    walk_one(node->cond, depth + 2);
+    report("then:\n");
+    walk_one(node->then, depth + 2);
+    return;
+  }
+  else if (node->kind == ND_FOR) {
+    report("while:\n");
+    report("init:\n");
+    walk_one(node->init, depth + 2);
+    report("cond:\n");
+    walk_one(node->cond, depth + 2);
+    report("succ:\n");
+    walk_one(node->succ, depth + 2);
+    report("then:\n");
+    walk_one(node->then, depth + 2);
+    return;
+  }
+  else if (node->kind == ND_FUNCALL) {
+    report("funcall: %s\n", node->name);
     return;
   }
   char *op;

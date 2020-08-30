@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
   }
   prog->stack_size = offset;
 
-  // dump_token(toktop); walk(node);
+  // dump_token(toktop); walk(prog->node);
 
   codegen(prog);
   return 0;
