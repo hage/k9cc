@@ -45,6 +45,7 @@ assert_exsrc() {
         exit 1
     fi
 }
+assert 42 'main(){return fun();} fun(){return 42;}'
 assert 55 'main(){return fib(9);} fib(n){if(n<=1)return 1;else{return fib(n-1) + fib(n-2);}}'
 assert 6 'main(){return fun(1,2,3,4,5,6);}fun(a,b,c,d,e,f){return f;}'
 assert 3 'main(){return fun(1,2,3,4,5,6);}fun(a,b,c,d,e,f){return c;}'
