@@ -45,6 +45,8 @@ assert_exsrc() {
         exit 1
     fi
 }
+assert_exsrc 6 test/add2.c 'return return6th(1,2,3,4,5,6);'
+assert_exsrc 1 test/add2.c 'return return1st(1,2,3,4,5,6);'
 assert_exsrc 231 test/add2.c 'return add_each2_and_multiply(1,2,3,4,5,6);'
 assert_exsrc 42 test/add2.c 'return add2(add2(10, 30), 2);'
 assert_exsrc 42 test/value40.c 'return value40() + 2;'
