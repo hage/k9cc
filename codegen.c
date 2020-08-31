@@ -6,6 +6,8 @@
 #include <assert.h>
 #include "k9cc.h"
 
+static char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
 typedef struct GenInfo {
   char *name;
 } GenInfo;
@@ -70,7 +72,6 @@ static void gen_addr(Node *node, GenInfo *_info) {
 }
 
 static void gen_args(Node *node, GenInfo *info) {
-  static char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
   static const int nargreg = sizeof(argreg) / sizeof(argreg[1]);
   int nargs = 0;
   for (Node *arg = node; arg; arg = arg->next) {
@@ -249,6 +250,13 @@ static void gen_func(Function *fun, GenInfo *info) {
   emit("push rbp");
   emit("mov rbp, rsp");
   emit("sub rsp, %u", fun->stack_size);
+
+  // params
+  int i = 0;
+  for (VarList *vl = fun->params; vl; vl = vl->next) {
+    emit("mov [rbp-%d], %s", vl->var->offset, argreg[i++]);
+  }
+
   for (Node *cur = fun->node; cur; cur = cur->next) {
     gen_stmt(cur, info);
   }

@@ -103,6 +103,7 @@ typedef struct Function Function;
 struct Function {
   Function *next;
   char *name;
+  VarList *params;
   Node *node;
   VarList *locals;
   int stack_size;

@@ -45,6 +45,11 @@ assert_exsrc() {
         exit 1
     fi
 }
+assert 55 'main(){return fib(9);} fib(n){if(n<=1)return 1;else{return fib(n-1) + fib(n-2);}}'
+assert 6 'main(){return fun(1,2,3,4,5,6);}fun(a,b,c,d,e,f){return f;}'
+assert 3 'main(){return fun(1,2,3,4,5,6);}fun(a,b,c,d,e,f){return c;}'
+assert 1 'main(){return fun(1,2,3,4,5,6);}fun(a,b,c,d,e,f){return a;}'
+assert 40 'main(){return twice(20);} twice(a){return a * 2;}'
 assert 42 'main(){return fourty_two();} fourty_two(){return 42;}'
 assert_exsrc 6 test/add2.c 'main () {return return6th(1,2,3,4,5,6);}'
 assert_exsrc 1 test/add2.c 'main () {return return1st(1,2,3,4,5,6);}'

@@ -126,6 +126,7 @@ void walk_real(Node *node, int depth) {
 }
 
 static Function *funcdef(ParseInfo *info);
+static VarList *params(ParseInfo *info);
 static Node *stmt(ParseInfo *info);
 static Node *expr_stmt(ParseInfo *info);
 static Node *expr(ParseInfo *info);
@@ -212,7 +213,7 @@ Function *program(Token *tok) {
   return top.next;
 }
 
-//  funcdef = ident "(" ")" "{" stmt* "}"
+// funcdef = ident "(" params? ")" "{" stmt* "}"
 static Function *funcdef(ParseInfo *info) {
   if (info->tok->kind != TK_IDENT) {
     error_tok(info->tok, "need a function definition");
@@ -221,14 +222,18 @@ static Function *funcdef(ParseInfo *info) {
 
   func->name = expect_ident(info);
   skip_tok(info, "(");
-  skip_tok(info, ")");
-  skip_tok(info, "{");
 
+  // params
   Var var = {0};
   var.name = "";
   VarList vl = {0};
   vl.var = &var;
   info->locals = &vl;
+  func->params = params(info);
+
+  skip_tok(info, ")");
+  skip_tok(info, "{");
+
 
   Node head = {}, *cur = &head, *next;
 
@@ -241,6 +246,21 @@ static Function *funcdef(ParseInfo *info) {
   func->stack_size = set_locals(func->locals);
   func->node = head.next;
   return func;
+}
+
+// params  = ident ("," ident)*
+static VarList *params(ParseInfo *info) {
+  if (peek(info, ")")) {
+    return NULL;
+  }
+  VarList *top, *cur = top = calloc(1, sizeof(VarList));
+  cur->var = find_or_new_var(info->locals, expect_ident(info));
+  while (consume(info, ",")) {
+    cur->next = calloc(1, sizeof(VarList));
+    cur = cur->next;
+    cur->var = find_or_new_var(info->locals, expect_ident(info));
+  }
+  return top;
 }
 
 // stmt = "return" expr ";"
