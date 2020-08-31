@@ -25,6 +25,7 @@ struct Token {
   int column;                   // ソース中の桁番号
 };
 
+char *identdup(Token *tok);
 long get_number(Token *tok);
 bool equal(Token *tok, const char *op);
 Token *skip(Token *tok, const char *op);
@@ -95,6 +96,8 @@ typedef struct ParseInfo {
 
 typedef struct Function Function;
 struct Function {
+  Function *next;
+  char *name;
   Node *node;
   Var *locals;
   int stack_size;

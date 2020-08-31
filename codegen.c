@@ -241,22 +241,29 @@ static void gen_stmt(Node *node, GenInfo *info) {
   }
 }
 
-void codegen(Function *prog) {
-  GenInfo info;
-  info.name = "main";
-
-  emit_head();
-  emit("main:");
+static void gen_func(Function *fun, GenInfo *info) {
+  emit("%s:", fun->name);
+  info->name = fun->name;
 
   // prologue
   emit("push rbp");
   emit("mov rbp, rsp");
-  emit("sub rsp, %u", prog->stack_size);
-  for (Node *cur = prog->node; cur; cur = cur->next) {
-    gen_stmt(cur, &info);
+  emit("sub rsp, %u", fun->stack_size);
+  for (Node *cur = fun->node; cur; cur = cur->next) {
+    gen_stmt(cur, info);
   }
-  emit(".L.return_%s:", info.name);
+  emit(".L.return_%s:", info->name);
   emit("mov rsp, rbp");
   emit("pop rbp");
   emit("ret");
+
+}
+
+void codegen(Function *prog) {
+  GenInfo info;
+  emit_head();
+
+  for (Function *fun = prog; fun; fun = fun->next) {
+    gen_func(fun, &info);
+  }
 }

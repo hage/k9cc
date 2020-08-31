@@ -18,6 +18,14 @@ static int is_nameletter2(char c) {
   return is_nameletter1(c) || isdigit(c);
 }
 
+// identを切り出して返す
+char *identdup(Token *tok) {
+  if (tok->kind != TK_IDENT) {
+    error_tok(tok, "token type is not TK_IDENT");
+  }
+  return strndup(tok->loc, tok->len);
+}
+
 long get_number(Token *tok) {
   if (!tok || tok->kind != TK_NUM) {
     error_tok(tok, "lexser/数字が必要です");
