@@ -61,9 +61,14 @@ typedef enum {
 // Local variable
 typedef struct Var Var;
 struct Var {
-  Var *next;
   const char *name;
   int offset;
+};
+
+typedef struct VarList VarList;
+struct VarList{
+  VarList *next;
+  Var *var;
 };
 
 // AST node type
@@ -90,7 +95,7 @@ struct Node {
 
 typedef struct ParseInfo {
   Token *tok;
-  Var *locals;
+  VarList *locals;
   int stack_size;
 } ParseInfo;
 
@@ -99,7 +104,7 @@ struct Function {
   Function *next;
   char *name;
   Node *node;
-  Var *locals;
+  VarList *locals;
   int stack_size;
 };
 

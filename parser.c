@@ -165,23 +165,24 @@ static char *expect_ident(ParseInfo *info) {
   return r;
 }
 
-static Var *find_var(Var *var, const char *ident) {
-  for (; var; var = var->next) {
-    if (strcmp(var->name, ident) == 0) {
-      return var;
+static Var *find_var(VarList *vl, const char *ident) {
+  for (; vl; vl = vl->next) {
+    if (strcmp(vl->var->name, ident) == 0) {
+      return vl->var;
     }
   }
   return NULL;
 }
 
-static Var *find_or_new_var(Var *var, const char *ident) {
-  Var *v = find_var(var, ident);
+static Var *find_or_new_var(VarList *vl, const char *ident) {
+  Var *v = find_var(vl, ident);
   if (!v) {
     v = calloc(sizeof(Var), 1);
     v->name = ident;
-    for (Var *w = var; ; w = w->next) {
-      if (!w->next) {
-        w->next = v;
+    for (VarList *nvl = vl; ; nvl = nvl->next) {
+      if (!nvl->next) {
+        nvl->next = calloc(sizeof(VarList), 1);
+        nvl->next->var = v;
         break;
       }
     }
@@ -190,11 +191,11 @@ static Var *find_or_new_var(Var *var, const char *ident) {
 }
 
 // returns stacksize
-static int set_locals(Var *locals) {
+static int set_locals(VarList *locals) {
   size_t offset = 0;
-  for (Var *v = locals; v; v = v->next) {
+  for (VarList *v = locals; v; v = v->next) {
     offset += 8;
-    v->offset = offset;
+    v->var->offset = offset;
   }
   return offset;
 }
@@ -222,9 +223,12 @@ static Function *funcdef(ParseInfo *info) {
   skip_tok(info, "(");
   skip_tok(info, ")");
   skip_tok(info, "{");
+
   Var var = {0};
   var.name = "";
-  info->locals = &var;
+  VarList vl = {0};
+  vl.var = &var;
+  info->locals = &vl;
 
   Node head = {}, *cur = &head, *next;
 
