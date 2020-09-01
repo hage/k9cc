@@ -61,10 +61,13 @@ static void store() {
   emit("push rdi");
 }
 
-static void gen_addr(Node *node, GenInfo *_info) {
+static void gen_addr(Node *node, GenInfo *info) {
   if (node->kind == ND_VAR) {
     emit("lea rax, [rbp-%d]", node->var->offset);
     emit("push rax");
+  }
+  else if (node->kind == ND_DEREF) {
+    gen_expr(node->lhs, info);
   }
   else {
     error("lvalueではありません");
@@ -97,6 +100,13 @@ static void gen_expr(Node *node, GenInfo *info) {
   case ND_VAR:
     gen_addr(node, info);
     load();
+    return;
+  case ND_DEREF:
+    gen_expr(node->lhs, info);
+    load();
+    return;
+  case ND_ADDR:
+    gen_addr(node->lhs, info);
     return;
   case ND_NUM:
     emit("push %ld", node->val);

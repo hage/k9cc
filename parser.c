@@ -439,13 +439,26 @@ static Node *mul(ParseInfo *info) {
     return node;
   }
 }
-// unary   = ("+" | "-") ? primary
+// unary = ("+" | "-") ? primary
+//       | "*" unary
+//       | "&" unary
+
 static Node *unary(ParseInfo *info) {
   if (consume(info, "-")) {
     return new_binary(ND_SUB, new_num(0), primary(info));
   }
   else if (consume(info, "+")) {
     return primary(info);
+  }
+  else if (consume(info, "*")) {
+    Node *node = new_node(ND_DEREF);
+    node->lhs = unary(info);
+    return node;
+  }
+  else if (consume(info, "&")) {
+    Node *node = new_node(ND_ADDR);
+    node->lhs = unary(info);
+    return node;
   }
   else {
     return primary(info);

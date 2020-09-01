@@ -45,6 +45,9 @@ assert_exsrc() {
         exit 1
     fi
 }
+assert 4 'main(){a=4;return *&a;}'
+assert 123 'main(){set(&aa,120);return aa;} set(adr,val){*adr=val+3;}'
+assert 42 'main(){set(&aa,42);return aa;} set(adr,val){*adr=val;}'
 assert 42 'main(){return fun();} fun(){return 42;}'
 assert 55 'main(){return fib(9);} fib(n){if(n<=1)return 1;else{return fib(n-1) + fib(n-2);}}'
 assert 6 'main(){return fun(1,2,3,4,5,6);}fun(a,b,c,d,e,f){return f;}'
