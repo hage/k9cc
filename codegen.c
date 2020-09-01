@@ -42,11 +42,6 @@ static void emit(const char *fmt, ...) {
   va_end(ap);
   fprintf(fpout, "\n");
 }
-static void emit_head(void) {
-  emit(".intel_syntax noprefix");
-  emit(".globl main");
-}
-
 
 static void load() {
   emit("pop rax");
@@ -253,6 +248,7 @@ static void gen_stmt(Node *node, GenInfo *info) {
 }
 
 static void gen_func(Function *fun, GenInfo *info) {
+  emit(".global %s", fun->name);
   emit("%s:", fun->name);
   info->name = fun->name;
 
@@ -279,8 +275,8 @@ static void gen_func(Function *fun, GenInfo *info) {
 
 void codegen(Function *prog) {
   GenInfo info;
-  emit_head();
 
+  emit(".intel_syntax noprefix");
   for (Function *fun = prog; fun; fun = fun->next) {
     gen_func(fun, &info);
   }
