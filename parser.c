@@ -5,22 +5,25 @@
 #include <string.h>
 #include "k9cc.h"
 
-static Node *new_node(NodeKind kind) {
+static Node *new_node(ParseInfo *info, NodeKind kind) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = kind;
+  node->tok = info->tok;
   return node;
 }
 
-static Node *new_binary(NodeKind kind, Node *lhs, Node *rhs) {
-  Node *node = new_node(kind);
+static Node *new_binary(ParseInfo *info, NodeKind kind, Node *lhs, Node *rhs) {
+  Node *node = new_node(info, kind);
   node->lhs = lhs;
   node->rhs = rhs;
+  node->tok = info->tok;
   return node;
 }
 
-static Node *new_num(long val) {
-  Node *node = new_node(ND_NUM);
+static Node *new_num(ParseInfo *info, long val) {
+  Node *node = new_node(info, ND_NUM);
   node->val = val;
+  node->tok = info->tok;
   return node;
 }
 
@@ -271,13 +274,13 @@ static VarList *params(ParseInfo *info) {
 //      | expr-stmt
 static Node *stmt(ParseInfo *info) {
   if (consume(info, "return")) {
-    Node *node = new_node(ND_RETURN);
+    Node *node = new_node(info, ND_RETURN);
     node->lhs = expr(info);
     skip_tok(info, ";");
     return node;
   }
   else if (consume(info, "if")) {
-    Node *node = new_node(ND_IF);
+    Node *node = new_node(info, ND_IF);
     skip_tok(info, "(");
     node->cond = expr(info);
     skip_tok(info, ")");
@@ -288,7 +291,7 @@ static Node *stmt(ParseInfo *info) {
     return node;
   }
   else if (consume(info, "while")) {
-    Node *node = new_node(ND_WHILE);
+    Node *node = new_node(info, ND_WHILE);
     skip_tok(info, "(");
     node->cond = expr(info);
     skip_tok(info, ")");
@@ -296,7 +299,7 @@ static Node *stmt(ParseInfo *info) {
     return node;
   }
   else if (consume(info, "for")) {
-    Node *node = new_node(ND_FOR);
+    Node *node = new_node(info, ND_FOR);
     skip_tok(info, "(");
 
     if (!equal(info->tok, ";")) {
@@ -317,7 +320,7 @@ static Node *stmt(ParseInfo *info) {
     return node;
   }
   else if (consume(info, "{")) {
-    Node *node = new_node(ND_BLOCK);
+    Node *node = new_node(info, ND_BLOCK);
     Node top, *cur = &top;
     while (!consume(info, "}")) {
       cur->next = stmt(info);
@@ -331,7 +334,7 @@ static Node *stmt(ParseInfo *info) {
 
 // expr-stmt = expr ";"
 static Node *expr_stmt(ParseInfo *info) {
-  Node *node = new_node(ND_EXPR_STMT);
+  Node *node = new_node(info, ND_EXPR_STMT);
   node->lhs = expr(info);
   skip_tok(info, ";");
   return node;
@@ -347,7 +350,7 @@ static Node *assign(ParseInfo *info) {
   Node *lhs = equality(info);
   if (consume(info, "=")) {
     Node *rhs = assign(info);
-    Node *node = new_binary(ND_ASSIGN, lhs, rhs);
+    Node *node = new_binary(info, ND_ASSIGN, lhs, rhs);
     return node;
   }
   else {
@@ -362,12 +365,12 @@ static Node *equality(ParseInfo *info) {
   for (;;) {
     if (consume(info, "==")) {
       Node *rhs = relational(info);
-      node = new_binary(ND_EQ, node, rhs);
+      node = new_binary(info, ND_EQ, node, rhs);
       continue;
     }
     if (consume(info, "!=")) {
       Node *rhs = relational(info);
-      node = new_binary(ND_NE, node, rhs);
+      node = new_binary(info, ND_NE, node, rhs);
       continue;
     }
     return node;
@@ -380,22 +383,22 @@ static Node *relational(ParseInfo *info) {
   for (;;) {
     if (consume(info, "<")) {
       Node *rhs = add(info);
-      node = new_binary(ND_LT, node, rhs);
+      node = new_binary(info, ND_LT, node, rhs);
       continue;
     }
     if (consume(info, "<=")) {
       Node *rhs = add(info);
-      node = new_binary(ND_LE, node, rhs);
+      node = new_binary(info, ND_LE, node, rhs);
       continue;
     }
     if (consume(info, ">")) {
       Node *rhs = add(info);
-      node = new_binary(ND_LT, rhs, node);
+      node = new_binary(info, ND_LT, rhs, node);
       continue;
     }
     if (consume(info, ">=")) {
       Node *rhs = add(info);
-      node = new_binary(ND_LE, rhs, node);
+      node = new_binary(info, ND_LE, rhs, node);
       continue;
     }
     return node;
@@ -409,12 +412,12 @@ static Node *add(ParseInfo *info) {
   for (;;) {
     if (consume(info, "+")) {
       Node *rhs = mul(info);
-      node = new_binary(ND_ADD, node, rhs);
+      node = new_binary(info, ND_ADD, node, rhs);
       continue;
     }
     if (consume(info, "-")) {
       Node *rhs = mul(info);
-      node = new_binary(ND_SUB, node, rhs);
+      node = new_binary(info, ND_SUB, node, rhs);
       continue;
     }
     return node;
@@ -428,12 +431,12 @@ static Node *mul(ParseInfo *info) {
   for (;;) {
     if (consume(info, "*")) {
       Node *rhs = unary(info);
-      node = new_binary(ND_MUL, node, rhs);
+      node = new_binary(info, ND_MUL, node, rhs);
       continue;
     }
     if (consume(info, "/")) {
       Node *rhs = unary(info);
-      node = new_binary(ND_DIV, node, rhs);
+      node = new_binary(info, ND_DIV, node, rhs);
       continue;
     }
     return node;
@@ -445,18 +448,18 @@ static Node *mul(ParseInfo *info) {
 
 static Node *unary(ParseInfo *info) {
   if (consume(info, "-")) {
-    return new_binary(ND_SUB, new_num(0), primary(info));
+    return new_binary(info, ND_SUB, new_num(info, 0), primary(info));
   }
   else if (consume(info, "+")) {
     return primary(info);
   }
   else if (consume(info, "*")) {
-    Node *node = new_node(ND_DEREF);
+    Node *node = new_node(info, ND_DEREF);
     node->lhs = unary(info);
     return node;
   }
   else if (consume(info, "&")) {
-    Node *node = new_node(ND_ADDR);
+    Node *node = new_node(info, ND_ADDR);
     node->lhs = unary(info);
     return node;
   }
@@ -488,14 +491,14 @@ static Node *primary(ParseInfo *info) {
     char *name = strndup(info->tok->loc, info->tok->len);
     advance_tok(info);
     if (peek(info, "(")) {
-      Node *node = new_node(ND_FUNCALL);
+      Node *node = new_node(info, ND_FUNCALL);
       node->name = name;
       node->args = func_args(info);
       return node;
     }
     else {
       Var *var = find_or_new_var(info->locals, name);
-      Node *node = new_node(ND_VAR);
+      Node *node = new_node(info, ND_VAR);
       node->var = var;
       return node;
     }
@@ -506,7 +509,7 @@ static Node *primary(ParseInfo *info) {
     return node;
   }
   else {
-    Node *node = new_num(get_number(info->tok));
+    Node *node = new_num(info, get_number(info->tok));
     advance_tok(info);
     return node;
   }

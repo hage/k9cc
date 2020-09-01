@@ -65,7 +65,7 @@ static void gen_addr(Node *node, GenInfo *info) {
     gen_expr(node->lhs, info);
   }
   else {
-    error("lvalueではありません");
+    error_tok(node->tok, "lvalueではありません");
   }
 }
 
@@ -77,7 +77,7 @@ static void gen_args(Node *node, GenInfo *info) {
     gen_expr(arg, info);
   }
   if (nargreg < nargs) {
-    error("number of argument out of range");
+    error_tok(node->tok, "number of argument out of range");
   }
   for (int i = nargs - 1; 0 <= i; i--) {
     emit("pop %s", argreg[i]);
@@ -170,7 +170,7 @@ static void gen_expr(Node *node, GenInfo *info) {
     break;
   default:
     walk(node);
-    error("invalid expression");
+    error_tok(node->tok, "invalid expression");
   }
   emit("push rax");
 }
@@ -243,7 +243,7 @@ static void gen_stmt(Node *node, GenInfo *info) {
     }
     break;
   default:
-    error("invalid statement");
+    error_tok(node->tok, "invalid statement");
   }
 }
 

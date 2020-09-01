@@ -78,6 +78,8 @@ typedef struct Node Node;
 struct Node {
   NodeKind kind;
   Node *next;                   // Next node
+  Token *tok;
+
   Node *lhs;                    // 左辺
   Node *rhs;                    // 右辺
   Var *var;                     // ND_VARのときに使う
