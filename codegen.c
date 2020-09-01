@@ -242,6 +242,9 @@ static void gen_stmt(Node *node, GenInfo *info) {
       gen_stmt(cur, info);
     }
     break;
+  case ND_NOP:
+    // nothing to do
+    break;
   default:
     error_tok(node->tok, "invalid statement");
   }

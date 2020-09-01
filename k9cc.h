@@ -58,6 +58,7 @@ typedef enum {
   ND_VAR,                       // Variable
   ND_NUM,                       // numeric
   ND_FUNCALL,                   // function call
+  ND_NOP,                       // non-operation
 } NodeKind;
 
 // Local variable

@@ -169,6 +169,7 @@ static char *expect_ident(ParseInfo *info) {
   return r;
 }
 
+// 変数を探す
 static Var *find_var(VarList *vl, const char *ident) {
   for (; vl; vl = vl->next) {
     if (strcmp(vl->var->name, ident) == 0) {
@@ -178,17 +179,30 @@ static Var *find_var(VarList *vl, const char *ident) {
   return NULL;
 }
 
-static Var *find_or_new_var(VarList *vl, const char *ident) {
+// 変数を探す。見つからなかったときはエラー
+static Var *detect_var(VarList *vl, const char *ident, ParseInfo *info) {
   Var *v = find_var(vl, ident);
   if (!v) {
-    v = calloc(sizeof(Var), 1);
-    v->name = ident;
-    for (VarList *nvl = vl; ; nvl = nvl->next) {
-      if (!nvl->next) {
-        nvl->next = calloc(sizeof(VarList), 1);
-        nvl->next->var = v;
-        break;
-      }
+    error_tok(info->tok, "unknown variable: %s", ident);
+  }
+  return v;
+}
+
+// 変数作る。すでに変数が存在していたときはエラー
+static Var *new_var(VarList *vl, const char *ident, ParseInfo *info) {
+  Var *v = find_var(vl, ident);
+
+  if (v) {
+    error_tok(info->tok, "duplicate variable definition: %s", ident);
+  }
+
+  v = calloc(1, sizeof(Var));
+  v->name = ident;
+  for (VarList *nvl = vl; ; nvl = nvl->next) {
+    if (!nvl->next) {
+      nvl->next = calloc(sizeof(VarList), 1);
+      nvl->next->var = v;
+      break;
     }
   }
   return v;
@@ -216,8 +230,10 @@ Function *program(Token *tok) {
   return top.next;
 }
 
-// funcdef = ident "(" params? ")" "{" stmt* "}"
+// funcdef = "int" ident "(" params? ")" "{" stmt* "}"
 static Function *funcdef(ParseInfo *info) {
+  skip_tok(info, "int");
+
   if (info->tok->kind != TK_IDENT) {
     error_tok(info->tok, "need a function definition");
   }
@@ -251,17 +267,23 @@ static Function *funcdef(ParseInfo *info) {
   return func;
 }
 
-// params  = ident ("," ident)*
+// params  = "int" ident ("," "int" ident)*
 static VarList *params(ParseInfo *info) {
   if (peek(info, ")")) {
     return NULL;
   }
+
+  skip_tok(info, "int");
+
   VarList *top, *cur = top = calloc(1, sizeof(VarList));
-  cur->var = find_or_new_var(info->locals, expect_ident(info));
+  cur->var = new_var(info->locals, expect_ident(info), info);
   while (consume(info, ",")) {
+
+    skip_tok(info, "int");
+
     cur->next = calloc(1, sizeof(VarList));
     cur = cur->next;
-    cur->var = find_or_new_var(info->locals, expect_ident(info));
+    cur->var = new_var(info->locals, expect_ident(info), info);
   }
   return top;
 }
@@ -271,6 +293,7 @@ static VarList *params(ParseInfo *info) {
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
+//      | "int" ident ";"
 //      | expr-stmt
 static Node *stmt(ParseInfo *info) {
   if (consume(info, "return")) {
@@ -329,6 +352,13 @@ static Node *stmt(ParseInfo *info) {
     node->body = top.next;
     return node;
   }
+  else if (consume(info, "int")) {
+    Node *node = new_node(info, ND_NOP);
+    new_var(info->locals, expect_ident(info), info);
+    skip_tok(info, ";");
+    return node;
+  }
+
   return expr_stmt(info);
 }
 
@@ -497,7 +527,7 @@ static Node *primary(ParseInfo *info) {
       return node;
     }
     else {
-      Var *var = find_or_new_var(info->locals, name);
+      Var *var = detect_var(info->locals, name, info);
       Node *node = new_node(info, ND_VAR);
       node->var = var;
       return node;

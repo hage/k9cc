@@ -1,11 +1,12 @@
 program         = funcdef*
-funcdef         = ident "(" params? ")" "{" stmt* "}"
-params          = ident ("," ident)*
+funcdef         = "int" ident "(" params? ")" "{" stmt* "}"
+params          = "int" ident ("," "int" ident)*
 stmt            = "return" expr ";"
                 | "if" "(" expr ")" stmt ("else" stmt)?
                 | "while" "(" expr ")" stmt
                 | "for" "(" expr? ";" expr? ";" expr? ")" stmt
                 | "{" stmt* "}"
+                | "int" ident ";"
                 | expr-stmt
 expr-stmt       = expr ";"
 expr            = assign
