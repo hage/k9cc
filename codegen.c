@@ -7,6 +7,7 @@
 #include "k9cc.h"
 
 static char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+static const int nargreg = sizeof(argreg) / sizeof(argreg[1]);
 
 typedef struct GenInfo {
   char *name;
@@ -70,7 +71,6 @@ static void gen_addr(Node *node, GenInfo *info) {
 }
 
 static void gen_args(Node *node, GenInfo *info) {
-  static const int nargreg = sizeof(argreg) / sizeof(argreg[1]);
   int nargs = 0;
   for (Node *arg = node; arg; arg = arg->next) {
     nargs++;
@@ -260,6 +260,9 @@ static void gen_func(Function *fun, GenInfo *info) {
   // params
   int i = 0;
   for (VarList *vl = fun->params; vl; vl = vl->next) {
+    if (nargreg < i) {
+      error("function %s: number of parameters out of range", fun->name);
+    }
     emit("mov [rbp-%d], %s", vl->var->offset, argreg[i++]);
   }
 
