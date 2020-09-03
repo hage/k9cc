@@ -296,14 +296,15 @@ static VarList *params(ParseInfo *info) {
 //      | "int" ident ";"
 //      | expr-stmt
 static Node *stmt(ParseInfo *info) {
+  Node *node;
   if (consume(info, "return")) {
-    Node *node = new_node(info, ND_RETURN);
+    node = new_node(info, ND_RETURN);
     node->lhs = expr(info);
     skip_tok(info, ";");
     return node;
   }
   else if (consume(info, "if")) {
-    Node *node = new_node(info, ND_IF);
+    node = new_node(info, ND_IF);
     skip_tok(info, "(");
     node->cond = expr(info);
     skip_tok(info, ")");
@@ -314,7 +315,7 @@ static Node *stmt(ParseInfo *info) {
     return node;
   }
   else if (consume(info, "while")) {
-    Node *node = new_node(info, ND_WHILE);
+    node = new_node(info, ND_WHILE);
     skip_tok(info, "(");
     node->cond = expr(info);
     skip_tok(info, ")");
@@ -322,7 +323,7 @@ static Node *stmt(ParseInfo *info) {
     return node;
   }
   else if (consume(info, "for")) {
-    Node *node = new_node(info, ND_FOR);
+    node = new_node(info, ND_FOR);
     skip_tok(info, "(");
 
     if (!equal(info->tok, ";")) {
@@ -343,7 +344,7 @@ static Node *stmt(ParseInfo *info) {
     return node;
   }
   else if (consume(info, "{")) {
-    Node *node = new_node(info, ND_BLOCK);
+    node = new_node(info, ND_BLOCK);
     Node top, *cur = &top;
     while (!consume(info, "}")) {
       cur->next = stmt(info);
@@ -353,7 +354,7 @@ static Node *stmt(ParseInfo *info) {
     return node;
   }
   else if (consume(info, "int")) {
-    Node *node = new_node(info, ND_NOP);
+    node = new_node(info, ND_NOP);
     new_var(info->locals, expect_ident(info), info);
     skip_tok(info, ";");
     return node;
