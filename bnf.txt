@@ -6,8 +6,9 @@ stmt            = "return" expr ";"
                 | "while" "(" expr ")" stmt
                 | "for" "(" expr? ";" expr? ";" expr? ")" stmt
                 | "{" stmt* "}"
-                | "int" ident ";"
+                | var-def
                 | expr-stmt
+var-def         = "int" ident ";"
 expr-stmt       = expr ";"
 expr            = assign
 assign          = equality ("=" assign)?

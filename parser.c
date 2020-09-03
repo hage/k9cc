@@ -131,6 +131,7 @@ void walk_real(Node *node, int depth) {
 static Function *funcdef(ParseInfo *info);
 static VarList *params(ParseInfo *info);
 static Node *stmt(ParseInfo *info);
+static Node *var_def(ParseInfo *info);
 static Node *expr_stmt(ParseInfo *info);
 static Node *expr(ParseInfo *info);
 static Node *assign(ParseInfo *info);
@@ -293,7 +294,7 @@ static VarList *params(ParseInfo *info) {
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
-//      | "int" ident ";"
+//      | var-def
 //      | expr-stmt
 static Node *stmt(ParseInfo *info) {
   Node *node;
@@ -353,14 +354,22 @@ static Node *stmt(ParseInfo *info) {
     node->body = top.next;
     return node;
   }
-  else if (consume(info, "int")) {
-    node = new_node(info, ND_NOP);
-    new_var(info->locals, expect_ident(info), info);
-    skip_tok(info, ";");
+  else if ((node = var_def(info))) {
     return node;
   }
-
   return expr_stmt(info);
+}
+
+// var-def = "int" ident ";"
+static Node *var_def(ParseInfo *info) {
+  if (!consume(info, "int")) {
+    return NULL;
+  }
+  Node *node = new_node(info, ND_NOP);
+  new_var(info->locals, expect_ident(info), info);
+  skip_tok(info, ";");
+  return node;
+
 }
 
 // expr-stmt = expr ";"
